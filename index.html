@@ -91,7 +91,7 @@
       padding: 26px 22px; display:grid; gap: 6px; }
     .preview .title { font-size: clamp(26px, 4vw, 36px); font-weight: 800; }
     /* Presentation view title uses Bricolage Grotesque */
-    #ev-preview .title { font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; font-weight: 700; }
+    
     .preview .when { font-size: 14px; color: color-mix(in oklab, var(--preview-fg), black 30%); }
 
     .sr-only { position: absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; }
@@ -644,7 +644,7 @@
       applyThemeAndContent(ev);
 
       // Determine host-only privileges (creator-only in local mode)
-      const isOwner = localStorage.getItem(`owner:${eid}`) === '1';
+      const owner = localStorage.getItem(`owner:${eid}`) === '1';
 
       // Invite panel
       const link = location.origin + location.pathname + `#/event/${eid}`;
