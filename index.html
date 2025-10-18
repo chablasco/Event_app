@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="sv">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>EventApp – Skapa & Dela Event</title>
+  <title>EventApp by Cha Blasco – Create & Share Events</title>
   <style>
     :root {
       --bg: #0f172a;       /* default slate-900 */
       --fg: #e2e8f0;       /* default slate-200 */
-      --card: #111827;     /* slate-900-ish */
+      --card: color-mix(in oklab, var(--bg) 85%, black 15%);
       --muted: #94a3b8;    /* slate-400 */
       --accent: #2563eb;   /* blue-600 */
       --radius: 16px;
@@ -27,16 +27,17 @@
       border-bottom: 1px solid rgba(255,255,255,.06);
     }
     .container { width: min(1100px, 100%); margin: 0 auto; padding: 16px 20px; }
-    .row { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
+    .row { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
     .brand { font-weight: 700; letter-spacing:.2px; }
+    .brand a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
     .btn {
-      appearance: none; border: 1px solid rgba(255,255,255,.12);
-      padding: 10px 14px; border-radius: 999px; background: #111827; color: var(--fg);
+      appearance: none; border: 1px solid color-mix(in oklab, var(--fg) 20%, transparent);
+      padding: 10px 14px; border-radius: 999px; background: color-mix(in oklab, var(--bg) 80%, black 20%); color: var(--fg);
       box-shadow: var(--shadow); cursor: pointer; transition: .2s transform, .2s opacity, .2s background;
     }
     .btn:hover { transform: translateY(-1px); }
     .btn.primary { background: var(--accent); border-color: transparent; color: white; }
-    .btn.ghost { background: transparent; border-color: rgba(255,255,255,.18); }
+    .btn.ghost { background: transparent; border-color: color-mix(in oklab, var(--fg) 25%, transparent); }
 
     main { flex: 1; }
     .card {
@@ -50,13 +51,13 @@
     label { display:block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
     input[type="text"], input[type="email"], input[type="datetime-local"], textarea, select {
       width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12);
-      background: #0b1220; color: var(--fg); outline: none; font: inherit;
+      background: color-mix(in oklab, var(--bg) 90%, black 10%); color: var(--fg); outline: none; font: inherit;
     }
     textarea { min-height: 110px; resize: vertical; }
 
     .cover {
       position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid rgba(255,255,255,.1);
-      min-height: 160px; display: grid; place-items: center; background: #0b1220;
+      min-height: 160px; display: grid; place-items: center; background: color-mix(in oklab, var(--bg) 90%, black 10%);
     }
     .cover img { width: 100%; height: 280px; object-fit: cover; display: block; }
 
@@ -76,10 +77,7 @@
     .success { color: #bbf7d0; }
     .warning { color: #fde68a; }
 
-    .preview {
-      --preview-bg: var(--bg);
-      --preview-fg: var(--fg);
-      --preview-font: var(--font);
+    .preview { --preview-bg: var(--bg); --preview-fg: var(--fg); --preview-font: var(--font);
       border-radius: var(--radius); overflow: hidden; border:1px solid rgba(255,255,255,.1);
     }
     .preview .hero { background: var(--preview-bg); color: var(--preview-fg); font-family: var(--preview-font);
@@ -91,21 +89,22 @@
     .divider { height:1px; background: rgba(255,255,255,.08); margin: 8px 0 14px; }
 
     .toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
-      background: #111827; color: var(--fg); border: 1px solid rgba(255,255,255,.14);
+      background: color-mix(in oklab, var(--bg) 80%, black 20%); color: var(--fg);
+      border: 1px solid rgba(255,255,255,.14);
       padding: 10px 14px; border-radius: 999px; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: .2s ease; }
     .toast.show { opacity: 1; }
   </style>
-  <!-- Optional Firebase (fyll din config för molnlagring/RSVP i realtid). Lämna tomt för lokalt läge. -->
+
+  <!-- Optional Firebase (fill your config for cloud storage/real-time RSVP). Leave empty to run locally. -->
   <script type="module" id="firebase-loader">
-    // Fyll i om du vill använda Firebase (annars kör appen lokalt i webbläsaren)
+    // Fill in if you want to use Firebase (otherwise, the app runs locally in the browser)
     window.FIREBASE_CONFIG = {
-      apiKey: "",            // t.ex. "AIza..."
+      apiKey: "",            // e.g. "AIza..."
       authDomain: "",
       projectId: "",
-      storageBucket: "",     // valfritt, för att ladda upp omslagsbilder senare
+      storageBucket: "",     // optional, for uploading cover images later
     };
 
-    // Förberedd dynamisk import: bara om API-nyckeln finns
     if (window.FIREBASE_CONFIG.apiKey) {
       try {
         const [{ initializeApp }, { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query, where, getDocs }, { getStorage, ref, uploadString, getDownloadURL } ] = await Promise.all([
@@ -120,7 +119,7 @@
           app,
         };
       } catch (e) {
-        console.warn('Firebase kunde inte laddas, kör lokalt istället.', e);
+        console.warn('Firebase failed to load, running locally instead.', e);
       }
     }
   </script>
@@ -128,54 +127,67 @@
 <body>
   <header>
     <div class="container row">
-      <div class="brand">🎉 EventApp</div>
+      <div class="brand">🎉 EventApp by <a href="https://www.chablasco.com" target="_blank" rel="noopener">Cha Blasco</a></div>
       <nav class="row" style="gap:8px">
-        <button class="btn ghost" id="btn-home">Hem</button>
-        <button class="btn primary" id="btn-new">Skapa event</button>
+        <button class="btn ghost" id="btn-home">My events</button>
+        <button class="btn primary" id="btn-new">Create event</button>
       </nav>
     </div>
   </header>
 
   <main class="container" id="app" aria-live="polite"></main>
 
+  <!-- LIST VIEW -->
+  <template id="tpl-list">
+    <section class="stack">
+      <div class="row between center">
+        <h2 style="margin:0">My events</h2>
+        <button class="btn primary" id="go-new">Create new</button>
+      </div>
+      <div id="list-box" class="grid"></div>
+      <p class="muted" id="list-hint"></p>
+    </section>
+  </template>
+
+  <!-- NEW EVENT VIEW -->
   <template id="tpl-new">
     <section class="grid cols-2">
       <form class="card stack" id="new-form">
-        <h2 style="margin:0">Skapa event</h2>
-        <p class="muted" style="margin-top:-6px">Anpassa utseendet och fyll i detaljerna. * = obligatoriskt.</p>
+        <h2 style="margin:0">Create event</h2>
+        <p class="muted" style="margin-top:-6px">Customize the look and fill in the details. * = required.</p>
         <div class="grid cols-2">
           <div>
-            <label for="name">Eventnamn *</label>
-            <input id="name" name="name" type="text" required placeholder="T.ex. Spelkväll" />
+            <label for="name">Event name *</label>
+            <input id="name" name="name" type="text" required placeholder="e.g. Game Night" />
           </div>
           <div>
-            <label for="host">Värdens e‑post</label>
-            <input id="host" name="host" type="email" placeholder="namn@exempel.se" />
+            <label for="host">Host email</label>
+            <input id="host" name="host" type="email" placeholder="name@example.com" />
           </div>
           <div>
-            <label for="start">Start *</label>
+            <label for="start">Starts *</label>
             <input id="start" name="start" type="datetime-local" required />
           </div>
           <div>
-            <label for="end">Slut *</label>
+            <label for="end">Ends *</label>
             <input id="end" name="end" type="datetime-local" required />
           </div>
         </div>
         <div>
-          <label for="desc">Beskrivning *</label>
-          <textarea id="desc" name="desc" required placeholder="Kort beskrivning, adress, vad man ska ta med osv."></textarea>
+          <label for="desc">Description *</label>
+          <textarea id="desc" name="desc" required placeholder="Brief description, address, what to bring, etc."></textarea>
         </div>
         <div class="grid cols-2">
           <div>
-            <label for="bg">Bakgrundsfärg</label>
+            <label for="bg">Background color</label>
             <input id="bg" name="bg" type="color" value="#0f172a" />
           </div>
           <div>
-            <label for="fg">Textfärg</label>
+            <label for="fg">Text color</label>
             <input id="fg" name="fg" type="color" value="#e2e8f0" />
           </div>
           <div>
-            <label for="font">Typsnitt</label>
+            <label for="font">Font</label>
             <select id="font" name="font">
               <option value="system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">Sans (system)</option>
               <option value="Georgia, 'Times New Roman', serif">Serif</option>
@@ -183,37 +195,38 @@
             </select>
           </div>
           <div>
-            <label for="cover">Omslagsbild</label>
+            <label for="cover">Cover image</label>
             <input id="cover" name="cover" type="file" accept="image/*" />
           </div>
         </div>
         <div class="row between">
-          <div class="muted">Tips: Ladda upp en horisontell bild (ca 1200×600).</div>
-          <button class="btn primary" type="submit">Skapa event</button>
+          <div class="muted">Tip: Use a horizontal image (~1200×600).</div>
+          <button class="btn primary" type="submit">Create</button>
         </div>
       </form>
 
       <div class="card stack">
-        <h2 style="margin:0">Förhandsvisning</h2>
+        <h2 style="margin:0">Preview</h2>
         <div class="preview" id="preview">
-          <div class="cover" id="preview-cover"><span class="muted">Ingen bild vald</span></div>
+          <div class="cover" id="preview-cover"><span class="muted">No image selected</span></div>
           <div class="hero">
-            <div class="title" id="p-title">Eventnamn</div>
-            <div class="when" id="p-when">Start – Slut</div>
-            <div id="p-desc" class="muted">Beskrivning...</div>
+            <div class="title" id="p-title">Event name</div>
+            <div class="when" id="p-when">Start – End</div>
+            <div id="p-desc" class="muted">Description...</div>
           </div>
         </div>
         <div class="divider"></div>
         <div class="stack">
           <div class="row-gap">
-            <span class="chip">Dela länken efter att du skapat eventet</span>
-            <span class="chip">Gäster kan svara: Ja / Nej / Kanske</span>
+            <span class="chip">Share the link after creating the event</span>
+            <span class="chip">Guests can reply: Yes / No / Maybe</span>
           </div>
         </div>
       </div>
     </section>
   </template>
 
+  <!-- EVENT VIEW -->
   <template id="tpl-event">
     <article class="stack">
       <section class="preview" id="ev-preview">
@@ -227,91 +240,91 @@
 
       <section class="grid cols-2">
         <div class="card stack" id="invite-box">
-          <h3 style="margin:0">Bjud in</h3>
-          <p class="muted" style="margin-top:-6px">Skicka e‑postinbjudningar eller kopiera eventlänken.</p>
-          <label for="invite-emails">E‑post (komma‑separerade)</label>
-          <input id="invite-emails" type="text" placeholder="exempel@ex.se, kompis@ex.se" />
+          <h3 style="margin:0">Invite</h3>
+          <p class="muted" style="margin-top:-6px">Send email invites or copy the event link.</p>
+          <label for="invite-emails">Emails (comma-separated)</label>
+          <input id="invite-emails" type="text" placeholder="friend@example.com, buddy@example.com" />
           <div class="row-gap">
-            <a class="btn" id="btn-mailto" href="#">Öppna e‑postklient</a>
-            <button class="btn ghost" id="btn-copy">Kopiera länk</button>
+            <a class="btn" id="btn-mailto" href="#">Open email client</a>
+            <button class="btn ghost" id="btn-copy">Copy link</button>
           </div>
           <div class="divider"></div>
-          <small class="muted">Obs: Utan server skickas mejl via din egen klient (mailto:). Du kan också klistra in länken var du vill.</small>
+          <small class="muted">Note: Without a server, emails are sent via your own client (mailto:). You can also paste the link anywhere.</small>
         </div>
 
         <div class="card stack">
           <h3 style="margin:0">RSVP</h3>
-          <p class="muted" style="margin-top:-6px">Svara om du kan komma och se gästlistan nedan.</p>
+          <p class="muted" style="margin-top:-6px">Respond if you can come and see the guest list below.</p>
           <div class="grid cols-2">
             <div>
-              <label for="my-name">Ditt namn</label>
-              <input id="my-name" type="text" placeholder="För- & efternamn" />
+              <label for="my-name">Your name</label>
+              <input id="my-name" type="text" placeholder="First & last name" />
             </div>
             <div>
-              <label for="my-email">Din e‑post</label>
-              <input id="my-email" type="email" placeholder="namn@exempel.se" />
+              <label for="my-email">Your email</label>
+              <input id="my-email" type="email" placeholder="name@example.com" />
             </div>
           </div>
           <div class="rsvp-btns">
-            <button class="btn" data-rsvp="yes">Ja</button>
-            <button class="btn" data-rsvp="maybe">Kanske</button>
-            <button class="btn" data-rsvp="no">Nej</button>
+            <button class="btn" data-rsvp="yes">Yes</button>
+            <button class="btn" data-rsvp="maybe">Maybe</button>
+            <button class="btn" data-rsvp="no">No</button>
           </div>
         </div>
       </section>
 
       <section class="card stack">
         <div class="row between center">
-          <h3 style="margin:0">Gästlista</h3>
+          <h3 style="margin:0">Guest list</h3>
           <div class="row-gap">
-            <span class="chip" id="count-yes">Ja: 0</span>
-            <span class="chip" id="count-maybe">Kanske: 0</span>
-            <span class="chip" id="count-no">Nej: 0</span>
+            <span class="chip" id="count-yes">Yes: 0</span>
+            <span class="chip" id="count-maybe">Maybe: 0</span>
+            <span class="chip" id="count-no">No: 0</span>
           </div>
         </div>
         <div id="guest-list" class="list"></div>
       </section>
 
       <section class="row between">
-        <div class="muted" id="owner-hint" hidden>Du skapade detta event. <button class="btn ghost" id="btn-edit">Redigera</button></div>
-        <button class="btn ghost" id="btn-back">← Tillbaka</button>
+        <div class="muted" id="owner-hint" hidden>You created this event. <button class="btn ghost" id="btn-edit">Edit</button></div>
+        <button class="btn ghost" id="btn-back">← Back</button>
       </section>
 
       <section class="card stack" id="edit-panel" hidden>
-        <h3 style="margin:0">Redigera event</h3>
+        <h3 style="margin:0">Edit event</h3>
         <div class="grid cols-2">
           <div>
-            <label>Eventnamn</label>
+            <label>Event name</label>
             <input id="e-name" type="text" />
           </div>
           <div>
-            <label>Värdens e‑post</label>
+            <label>Host email</label>
             <input id="e-host" type="email" />
           </div>
           <div>
-            <label>Start</label>
+            <label>Starts</label>
             <input id="e-start" type="datetime-local" />
           </div>
           <div>
-            <label>Slut</label>
+            <label>Ends</label>
             <input id="e-end" type="datetime-local" />
           </div>
         </div>
         <div>
-          <label>Beskrivning</label>
+          <label>Description</label>
           <textarea id="e-desc"></textarea>
         </div>
         <div class="grid cols-2">
           <div>
-            <label>Bakgrundsfärg</label>
+            <label>Background color</label>
             <input id="e-bg" type="color" />
           </div>
           <div>
-            <label>Textfärg</label>
+            <label>Text color</label>
             <input id="e-fg" type="color" />
           </div>
           <div>
-            <label>Typsnitt</label>
+            <label>Font</label>
             <select id="e-font">
               <option value="system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">Sans (system)</option>
               <option value="Georgia, 'Times New Roman', serif">Serif</option>
@@ -319,13 +332,13 @@
             </select>
           </div>
           <div>
-            <label>Omslagsbild</label>
+            <label>Cover image</label>
             <input id="e-cover" type="file" accept="image/*" />
           </div>
         </div>
         <div class="row between">
-          <span class="muted">Spara dina ändringar</span>
-          <button class="btn primary" id="btn-save">Spara</button>
+          <span class="muted">Save your changes</span>
+          <button class="btn primary" id="btn-save">Save</button>
         </div>
       </section>
     </article>
@@ -337,12 +350,24 @@
     const qs = (sel, el=document) => el.querySelector(sel);
     const qsa = (sel, el=document) => Array.from(el.querySelectorAll(sel));
 
+    const DEFAULT_THEME = { bg:'#0f172a', fg:'#e2e8f0', font: "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji'" };
+
+    const setTheme = ({bg, fg, font}) => {
+      const root = document.documentElement;
+      if (bg) root.style.setProperty('--bg', bg);
+      if (fg) root.style.setProperty('--fg', fg);
+      if (font) root.style.setProperty('--font', font);
+      // card auto-derives from --bg via CSS color-mix
+    };
+
+    const resetTheme = () => setTheme(DEFAULT_THEME);
+
     const fmtDateRange = (startISO, endISO) => {
       try {
         const s = new Date(startISO);
         const e = new Date(endISO);
-        const sStr = s.toLocaleString('sv-SE', { dateStyle:'medium', timeStyle:'short' });
-        const eStr = e.toLocaleString('sv-SE', { dateStyle:'medium', timeStyle:'short' });
+        const sStr = s.toLocaleString('en-GB', { dateStyle:'medium', timeStyle:'short' });
+        const eStr = e.toLocaleString('en-GB', { dateStyle:'medium', timeStyle:'short' });
         return `${sStr} – ${eStr}`;
       } catch { return `${startISO} – ${endISO}` }
     };
@@ -360,7 +385,7 @@
       setTimeout(() => t.classList.remove('show'), 1400);
     };
 
-    // --- Lagring (lokal eller Firebase) ---
+    // --- Storage (local or Firebase) ---
     const LocalStore = {
       mode: 'local',
       async createEvent(data) {
@@ -384,7 +409,6 @@
         const entry = { email, name, status, ts: Date.now() };
         if (idx >= 0) list[idx] = entry; else list.push(entry);
         localStorage.setItem(key, JSON.stringify(list));
-        // pinga andra flikar via storage-event indirekt
       },
       async getRSVPs(eid) {
         return JSON.parse(localStorage.getItem(`rsvps:${eid}`) || '[]');
@@ -393,6 +417,16 @@
         const onStorage = (e) => { if (e.key === `rsvps:${eid}`) cb(JSON.parse(e.newValue || '[]')); };
         window.addEventListener('storage', onStorage);
         return () => window.removeEventListener('storage', onStorage);
+      },
+      listEvents() {
+        const out = [];
+        for (let i=0;i<localStorage.length;i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('event:')) {
+            try { const ev = JSON.parse(localStorage.getItem(k)); if (ev?.id) out.push(ev); } catch {}
+          }
+        }
+        return out.sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0));
       }
     };
 
@@ -418,9 +452,7 @@
       async addOrUpdateRSVP(eid, email, name, status) {
         const { setDoc, doc } = window._firebase;
         const safeId = email.replace(/\./g, ',');
-        await setDoc(doc(this.db, 'events', eid, 'rsvps', safeId), {
-          email, name, status, ts: Date.now()
-        });
+        await setDoc(doc(this.db, 'events', eid, 'rsvps', safeId), { email, name, status, ts: Date.now() });
       },
       async getRSVPs(eid) {
         const { getDocs, collection } = window._firebase;
@@ -431,10 +463,12 @@
       subscribeRSVPs(eid, cb) {
         const { onSnapshot, collection } = window._firebase;
         const q = collection(this.db, 'events', eid, 'rsvps');
-        const unsub = onSnapshot(q, (snap) => {
-          cb(snap.docs.map(d => d.data()));
-        });
+        const unsub = onSnapshot(q, (snap) => { cb(snap.docs.map(d => d.data())); });
         return unsub;
+      },
+      listEvents() {
+        // For simplicity, listing is only implemented for local mode in this demo.
+        return [];
       }
     };
 
@@ -442,20 +476,56 @@
 
     // --- Router ---
     const routes = {
-      '': () => showNew(),
+      '': () => showList(),
+      '#/events': () => showList(),
       '#/new': () => showNew(),
       '#/event': (parts) => showEvent(parts[2])
     };
 
     function route() {
-      const h = location.hash || '#/new';
+      const h = location.hash || '#/events';
       const parts = h.split('/');
-      const key = parts.length > 2 ? `#/event` : h;
+      const key = parts.length > 2 ? '#/event' : h;
       (routes[key] || routes['']) (parts);
+    }
+
+    // --- View: List (trackable events index) ---
+    function showList() {
+      resetTheme();
+      const app = qs('#app');
+      app.innerHTML = '';
+      const tpl = qs('#tpl-list');
+      const view = tpl.content.cloneNode(true);
+      app.appendChild(view);
+
+      const box = qs('#list-box', app);
+      const items = Store.listEvents();
+      if (items.length === 0) {
+        qs('#list-hint', app).textContent = 'No local events yet. Create one to get a unique link you can revisit.';
+      } else {
+        box.classList.add('grid','cols-2');
+        items.forEach(ev => {
+          const card = document.createElement('div');
+          card.className = 'card stack';
+          card.innerHTML = `
+            <div class="row between center">
+              <h3 style="margin:0">${ev.name}</h3>
+              <a class="btn" href="#/event/${ev.id}">Open</a>
+            </div>
+            <div class="muted">${fmtDateRange(ev.startISO, ev.endISO)}</div>
+            <div class="muted">URL: <code>${location.origin + location.pathname + '#/event/' + ev.id}</code></div>
+          `;
+          box.appendChild(card);
+        });
+      }
+      qs('#go-new', app).onclick = () => location.hash = '#/new';
+      qs('#btn-home').onclick = () => location.hash = '#/events';
+      qs('#btn-new').onclick = () => location.hash = '#/new';
     }
 
     // --- View: New Event ---
     async function showNew() {
+      resetTheme();
       const app = qs('#app');
       app.innerHTML = '';
       const tpl = qs('#tpl-new');
@@ -467,10 +537,10 @@
       const coverBox = $('#preview-cover');
 
       const syncPreview = () => {
-        const name = $('#name').value || 'Eventnamn';
-        const desc = $('#desc').value || 'Beskrivning...';
+        const name = $('#name').value || 'Event name';
+        const desc = $('#desc').value || 'Description...';
         const start = $('#start').value; const end = $('#end').value;
-        const when = (start && end) ? fmtDateRange(start, end) : 'Start – Slut';
+        const when = (start && end) ? fmtDateRange(start, end) : 'Start – End';
         const bg = $('#bg').value; const fg = $('#fg').value; const font = $('#font').value;
 
         preview.style.setProperty('--preview-bg', bg);
@@ -486,7 +556,7 @@
       qs('#cover', app).addEventListener('change', async (e) => {
         const f = e.target.files?.[0];
         if (!f) return; const url = await readFileDataURL(f);
-        coverBox.innerHTML = `<img alt="Omslagsbild" src="${url}">`;
+        coverBox.innerHTML = `<img alt="Cover image" src="${url}">`;
       });
 
       syncPreview();
@@ -496,8 +566,8 @@
         const name = $('#name').value.trim();
         const start = $('#start').value; const end = $('#end').value;
         const desc = $('#desc').value.trim();
-        if (!name || !start || !end || !desc) { toast('Fyll i alla obligatoriska fält'); return; }
-        if (new Date(end) < new Date(start)) { toast('Sluttiden kan inte vara före start'); return; }
+        if (!name || !start || !end || !desc) { toast('Please fill in all required fields'); return; }
+        if (new Date(end) < new Date(start)) { toast('End time cannot be before start'); return; }
         const host = $('#host').value.trim();
         const bg = $('#bg').value; const fg = $('#fg').value; const font = $('#font').value;
         const coverInput = qs('#cover', app);
@@ -509,10 +579,10 @@
         const eid = await Store.createEvent(data);
         localStorage.setItem(`owner:${eid}`, '1');
         location.hash = `#/event/${eid}`;
-        toast('Event skapat!');
+        toast('Event created!');
       });
 
-      qs('#btn-home').onclick = () => location.hash = '#/new';
+      qs('#btn-home').onclick = () => location.hash = '#/events';
       qs('#btn-new').onclick = () => location.hash = '#/new';
     }
 
@@ -527,28 +597,31 @@
 
       const ev = await Store.getEvent(eid);
       if (!ev) {
-        app.innerHTML = `<div class="card"><h3>Event hittades inte</h3><p class="muted">Länken kan vara fel eller så har eventet raderats (lokalt läge).</p><div class="row"><button class="btn" onclick="location.hash='#/new'">Skapa nytt</button></div></div>`;
+        app.innerHTML = `<div class="card"><h3>Event not found</h3><p class="muted">The link may be wrong or the event was removed (local mode).</p><div class="row"><button class="btn" onclick="location.hash='#/new'">Create new</button></div></div>`;
         return;
       }
 
-      // Apply preview styles
+      // Apply global theme to the whole page based on event settings
+      setTheme({ bg: ev.styles?.bg || DEFAULT_THEME.bg, fg: ev.styles?.fg || DEFAULT_THEME.fg, font: ev.styles?.font || DEFAULT_THEME.font });
+
+      // Apply preview styles (kept for the hero block)
       const prev = $('#ev-preview');
-      prev.style.setProperty('--preview-bg', ev.styles?.bg || '#0f172a');
-      prev.style.setProperty('--preview-fg', ev.styles?.fg || '#e2e8f0');
-      prev.style.setProperty('--preview-font', ev.styles?.font || 'system-ui');
+      prev.style.setProperty('--preview-bg', ev.styles?.bg || DEFAULT_THEME.bg);
+      prev.style.setProperty('--preview-fg', ev.styles?.fg || DEFAULT_THEME.fg);
+      prev.style.setProperty('--preview-font', ev.styles?.font || DEFAULT_THEME.font);
 
       $('#ev-title').textContent = ev.name;
       $('#ev-when').textContent = fmtDateRange(ev.startISO, ev.endISO);
       $('#ev-desc').textContent = ev.description;
 
       const cover = $('#ev-cover');
-      cover.innerHTML = ev.coverData ? `<img alt="Omslagsbild" src="${ev.coverData}"/>` : `<span class="muted">Ingen bild</span>`;
+      cover.innerHTML = ev.coverData ? `<img alt="Cover image" src="${ev.coverData}"/>` : `<span class="muted">No image</span>`;
 
       // Invite panel
       const link = location.origin + location.pathname + `#/event/${eid}`;
-      $('#btn-copy').addEventListener('click', async () => { await navigator.clipboard.writeText(link); toast('Länk kopierad'); });
-      const subject = encodeURIComponent(`Inbjudan: ${ev.name}`);
-      const body = encodeURIComponent(`${ev.name}\n${fmtDateRange(ev.startISO, ev.endISO)}\n\n${ev.description}\n\nOSA i länken: ${link}`);
+      $('#btn-copy').addEventListener('click', async () => { await navigator.clipboard.writeText(link); toast('Link copied'); });
+      const subject = encodeURIComponent(`Invitation: ${ev.name}`);
+      const body = encodeURIComponent(`${ev.name}\n${fmtDateRange(ev.startISO, ev.endISO)}\n\n${ev.description}\n\nRSVP at: ${link}`);
       $('#btn-mailto').href = `mailto:${encodeURIComponent(ev.hostEmail || '')}?subject=${subject}&body=${body}`;
 
       // RSVP handling
@@ -556,16 +629,16 @@
         const yes = list.filter(x => x.status === 'yes').length;
         const maybe = list.filter(x => x.status === 'maybe').length;
         const no = list.filter(x => x.status === 'no').length;
-        $('#count-yes').textContent = `Ja: ${yes}`;
-        $('#count-maybe').textContent = `Kanske: ${maybe}`;
-        $('#count-no').textContent = `Nej: ${no}`;
+        $('#count-yes').textContent = `Yes: ${yes}`;
+        $('#count-maybe').textContent = `Maybe: ${maybe}`;
+        $('#count-no').textContent = `No: ${no}`;
       };
 
       const renderGuests = (list) => {
         const box = $('#guest-list');
         box.innerHTML = '';
-        const row = (g) => `<div class="row between"><div>${g.name || 'Okänd'} <span class="muted">&lt;${g.email}&gt;</span></div><div>${g.status === 'yes' ? '✅' : g.status === 'maybe' ? '🤔' : '❌'}</div></div>`;
-        list.sort((a,b) => (a.status+'_'+a.name).localeCompare(b.status+'_'+b.name));
+        const row = (g) => `<div class="row between"><div>${g.name || 'Unknown'} <span class="muted">&lt;${g.email}&gt;</span></div><div>${g.status === 'yes' ? '✅' : g.status === 'maybe' ? '🤔' : '❌'}</div></div>`;
+        list.sort((a,b) => (a.status+'_'+(a.name||'')).localeCompare(b.status+'_'+(b.name||'')));
         list.forEach(g => { const d = document.createElement('div'); d.innerHTML = row(g); box.appendChild(d); });
       };
 
@@ -582,15 +655,15 @@
       qsa('[data-rsvp]', app).forEach(btn => btn.addEventListener('click', async () => {
         const name = $('#my-name').value.trim();
         const email = $('#my-email').value.trim();
-        if (!email) { toast('Fyll i din e‑post'); return; }
+        if (!email) { toast('Please enter your email'); return; }
         localStorage.setItem('me:name', name); localStorage.setItem('me:email', email);
         const status = btn.getAttribute('data-rsvp');
         await Store.addOrUpdateRSVP(eid, email, name, status);
-        toast('Svar skickat');
+        toast('Response saved');
         const list = await Store.getRSVPs(eid); applyCounts(list); renderGuests(list);
       }));
 
-      // Owner-only edit (om du skapade eventet i denna webbläsare)
+      // Owner-only edit (if you created the event in this browser)
       const owner = localStorage.getItem(`owner:${eid}`) === '1';
       const ownerHint = $('#owner-hint');
       if (owner) ownerHint.hidden = false;
@@ -608,8 +681,8 @@
         qs('#e-start', app).value = ev.startISO;
         qs('#e-end', app).value = ev.endISO;
         qs('#e-desc', app).value = ev.description;
-        qs('#e-bg', app).value = ev.styles?.bg || '#0f172a';
-        qs('#e-fg', app).value = ev.styles?.fg || '#e2e8f0';
+        qs('#e-bg', app).value = ev.styles?.bg || DEFAULT_THEME.bg;
+        qs('#e-fg', app).value = ev.styles?.fg || DEFAULT_THEME.fg;
         qs('#e-font', app).value = ev.styles?.font || 'system-ui';
       }
 
@@ -630,13 +703,18 @@
         if (f) data.coverData = await readFileDataURL(f);
         await Store.updateEvent(eid, data);
         Object.assign(ev, data);
-        toast('Sparat');
+        setTheme({ bg: ev.styles?.bg, fg: ev.styles?.fg, font: ev.styles?.font });
+        toast('Saved');
         showEvent(eid); // re-render
       }
+
+      // Update header buttons
+      qs('#btn-home').onclick = () => location.hash = '#/events';
+      qs('#btn-new').onclick = () => location.hash = '#/new';
     }
 
-    // Bind header buttons
-    qs('#btn-home').onclick = () => location.hash = '#/new';
+    // Bind header buttons (global)
+    qs('#btn-home').onclick = () => location.hash = '#/events';
     qs('#btn-new').onclick = () => location.hash = '#/new';
 
     window.addEventListener('hashchange', route);
