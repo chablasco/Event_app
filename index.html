@@ -90,6 +90,8 @@
     .preview .hero { background: var(--preview-bg); color: var(--preview-fg); font-family: var(--preview-font);
       padding: 26px 22px; display:grid; gap: 6px; }
     .preview .title { font-size: clamp(26px, 4vw, 36px); font-weight: 800; }
+    /* Presentation view title uses Bricolage Grotesque */
+    #ev-preview .title { font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; font-weight: 700; }
     .preview .when { font-size: 14px; color: color-mix(in oklab, var(--preview-fg), black 30%); }
 
     .sr-only { position: absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; }
@@ -649,7 +651,12 @@
       const mailtoBtn = $('#btn-mailto');
       if (mailtoBtn) {
         const subject = encodeURIComponent(`Invitation: ${ev.name}`);
-        const body = encodeURIComponent(`${ev.name}\n${fmtDateRange(ev.startISO, ev.endISO)}\n\n${ev.description}\n\nRSVP at: ${link}`);
+        const body = encodeURIComponent(`${ev.name}
+${fmtDateRange(ev.startISO, ev.endISO)}
+
+${ev.description}
+
+RSVP at: ${link}`);
         mailtoBtn.href = `mailto:${encodeURIComponent(ev.hostEmail || '')}?subject=${subject}&body=${body}`;
       }
       const copyBtn = $('#btn-copy');
