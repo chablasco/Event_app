@@ -43,7 +43,6 @@
     .btn.primary { background: var(--accent); border-color: transparent; color: white; }
     .btn.ghost { background: transparent; border-color: color-mix(in oklab, var(--fg) 25%, transparent); }
     .btn.danger { background: #ef4444; border-color: transparent; color: #fff; }
-    .btn.danger { background: #ef4444; border-color: transparent; color: #fff; }
 
     main { flex: 1; }
     .card {
@@ -451,10 +450,6 @@
         }
         return out.sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0));
       }
-    }
-        }
-        return out.sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0));
-      }
     };
 
     const FirebaseStore = {
@@ -530,6 +525,71 @@
       if (items.length === 0) {
         qs('#list-hint', app).textContent = 'No local events yet. Create one to get a unique link you can revisit.';
       } else {
+        box.classList.add('grid','cols-2');
+        items.forEach(ev => {
+          const link = location.origin + location.pathname + '#/event/' + ev.id;
+          const card = document.createElement('div');
+          card.className = 'card stack';
+          const coverHTML = ev.coverData
+            ? '<img alt="Cover image" src="' + ev.coverData + '"/>'
+            : '<span class="muted">No image</span>';
+          card.innerHTML = `
+            <div class="preview ev-preview">
+              <div class="cover">${coverHTML}</div>
+              <div class="hero">
+                <div class="title">${ev.name}</div>
+                <div class="when">${fmtDateRange(ev.startISO, ev.endISO)}</div>
+                <div class="muted">${(ev.description||'')}</div>
+              </div>
+            </div>
+            <div class="row-gap">
+              <a class="btn" href="#/event/${ev.id}">Open</a>
+              <button class="btn danger delete" data-id="${ev.id}">Delete</button>
+              <button class="btn ghost duplicate" data-id="${ev.id}">Duplicate</button>
+              <button class="btn ghost copy" data-link="${link}">Copy link</button>
+            </div>
+            <small class="muted">URL: <code>${link}</code></small>
+          `;
+          box.appendChild(card);
+          // Apply per-card theme to the preview block
+          const prev = card.querySelector('.ev-preview');
+          prev.style.setProperty('--preview-bg', ev.styles?.bg || DEFAULT_THEME.bg);
+          prev.style.setProperty('--preview-fg', ev.styles?.fg || DEFAULT_THEME.fg);
+          prev.style.setProperty('--preview-font', ev.styles?.font || DEFAULT_THEME.font);
+        });
+
+        // Copy handlers
+        qsa('.copy', box).forEach(btn => btn.addEventListener('click', async (e) => {
+          const l = e.currentTarget.getAttribute('data-link');
+          await navigator.clipboard.writeText(l);
+          toast('Link copied');
+        }));
+        // Delete handlers
+        qsa('.delete', box).forEach(btn => btn.addEventListener('click', async (e) => {
+          const eid = e.currentTarget.getAttribute('data-id');
+          const evToDel = items.find(it => it.id === eid);
+          const ok = confirm(`Delete "${evToDel?.name || 'this event'}"? This will also remove all RSVPs.`);
+          if (!ok) return;
+          await Store.deleteEvent(eid);
+          toast('Event deleted');
+          showList();
+        }));
+        // Duplicate handlers
+        qsa('.duplicate', box).forEach(btn => btn.addEventListener('click', async (e) => {
+          const eid = e.currentTarget.getAttribute('data-id');
+          const newId = await Store.duplicateEvent(eid);
+          if (newId) {
+            localStorage.setItem(`owner:${newId}`, '1');
+            toast('Event duplicated');
+            location.hash = '#/event/' + newId;
+          } else {
+            toast('Could not duplicate');
+          }
+        }));
+      }
+      qs('#btn-home').onclick = () => location.hash = '#/events';
+      qs('#btn-new').onclick = () => location.hash = '#/new';
+    } else {
         box.classList.add('grid','cols-2');
         items.forEach(ev => {
           const link = location.origin + location.pathname + '#/event/' + ev.id;
@@ -626,30 +686,9 @@
           await navigator.clipboard.writeText(l);
           toast('Link copied');
         }));
-        // Delete handlers
-        qsa('.delete', box).forEach(btn => btn.addEventListener('click', async (e) => {
-          const eid = e.currentTarget.getAttribute('data-id');
-          const evToDel = items.find(it => it.id === eid);
-          const ok = confirm(`Delete "${evToDel?.name || 'this event'}"? This will also remove all RSVPs.`);
-          if (!ok) return;
-          await Store.deleteEvent(eid);
-          toast('Event deleted');
-          showList();
-        }));
-        // Duplicate handlers
-        qsa('.duplicate', box).forEach(btn => btn.addEventListener('click', async (e) => {
-          const eid = e.currentTarget.getAttribute('data-id');
-          const newId = await Store.duplicateEvent(eid);
-          if (newId) {
-            localStorage.setItem(`owner:${newId}`, '1');
-            toast('Event duplicated');
-            location.hash = '#/event/' + newId;
-          } else {
-            toast('Could not duplicate');
-          }
-        }));
       }
-            qs('#btn-home').onclick = () => location.hash = '#/events';
+      qs('#go-new', app).onclick = () => location.hash = '#/new';
+      qs('#btn-home').onclick = () => location.hash = '#/events';
       qs('#btn-new').onclick = () => location.hash = '#/new';
     }
 
@@ -871,6 +910,15 @@ RSVP at: ${link}`);
 
     window.addEventListener('hashchange', route);
     route();
+
+    // Minimal global error handler to surface script issues
+    window.addEventListener('error', (e) => {
+      try {
+        console.error(e.error || e.message || e);
+        const t = document.getElementById('toast');
+        if (t) { t.textContent = 'Error: ' + (e.message || 'script issue'); t.classList.add('show'); setTimeout(()=> t.classList.remove('show'), 2500); }
+      } catch {}
+    });
   </script>
 </body>
 </html>
