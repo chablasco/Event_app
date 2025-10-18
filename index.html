@@ -1,922 +1,1090 @@
-<!DOCTYPE html>
-<html lang="sv">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Studio</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:wght@500&family=Roboto+Mono:wght@400&family=Poppins:wght@500&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            color-scheme: light dark;
-            --surface: #f6f8fa;
-            --surface-strong: #ffffff;
-            --surface-muted: #e9eef3;
-            --border: #d0d7de;
-            --text: #111827;
-            --accent: #2563eb;
-            --accent-strong: #1d4ed8;
-            --success: #0f9d58;
-            --danger: #dc2626;
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background: radial-gradient(circle at top left, #eff6ff, #f8fafc 45%, #e0f2fe);
-            color: var(--text);
-            display: flex;
-            flex-direction: column;
-        }
-
-        header {
-            padding: 1.8rem clamp(1rem, 4vw, 3rem);
-            background: rgba(15, 23, 42, 0.75);
-            color: white;
-            backdrop-filter: blur(8px);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
-        }
-
-        header h1 {
-            margin: 0;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            font-size: clamp(1.4rem, 2.8vw, 2rem);
-        }
-
-        header p {
-            margin: 0.35rem 0 0;
-            opacity: 0.85;
-            max-width: 48rem;
-            line-height: 1.5;
-        }
-
-        main {
-            flex: 1;
-            width: min(1200px, 95vw);
-            margin: 2.5rem auto 3rem;
-            display: grid;
-            gap: 2.5rem;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-        }
-
-        section {
-            background: rgba(255, 255, 255, 0.85);
-            border-radius: 20px;
-            padding: clamp(1.5rem, 3vw, 2.5rem);
-            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
-            backdrop-filter: blur(10px);
-        }
-
-        h2 {
-            font-size: 1.4rem;
-            margin: 0 0 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        h2 span {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 2rem;
-            height: 2rem;
-            border-radius: 0.75rem;
-            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-            color: white;
-            font-size: 0.95rem;
-            font-weight: 600;
-        }
-
-        .field-group {
-            display: grid;
-            gap: 1.5rem;
-        }
-
-        label {
-            font-weight: 600;
-            display: block;
-            margin-bottom: 0.4rem;
-        }
-
-        input[type="text"],
-        input[type="datetime-local"],
-        input[type="email"],
-        input[type="url"],
-        textarea,
-        select {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            font: inherit;
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06);
-            transition: border 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-
-        input:focus,
-        textarea:focus,
-        select:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
-            outline: none;
-        }
-
-        .time-grid {
-            display: grid;
-            gap: 1.2rem;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        }
-
-        .style-grid {
-            display: grid;
-            gap: 1.2rem;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            align-items: end;
-        }
-
-        .style-grid label {
-            margin-bottom: 0.6rem;
-        }
-
-        input[type="color"] {
-            height: 48px;
-            padding: 0;
-            border-radius: 12px;
-            border: none;
-            box-shadow: inset 0 0 0 1px var(--border);
-            cursor: pointer;
-        }
-
-        input[type="file"] {
-            font: inherit;
-        }
-
-        button {
-            border: none;
-            border-radius: 12px;
-            padding: 0.75rem 1.2rem;
-            font: inherit;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
-        }
-
-        button.primary {
-            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-            color: white;
-            box-shadow: 0 14px 24px rgba(37, 99, 235, 0.35);
-        }
-
-        button.secondary {
-            background: rgba(37, 99, 235, 0.08);
-            color: var(--accent-strong);
-        }
-
-        button.danger {
-            background: rgba(220, 38, 38, 0.1);
-            color: var(--danger);
-        }
-
-        button:hover {
-            transform: translateY(-1px);
-        }
-
-        .form-actions {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 1.6rem;
-        }
-
-        .message {
-            margin-top: 1rem;
-            padding: 0.85rem 1rem;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            display: none;
-        }
-
-        .message.visible {
-            display: block;
-        }
-
-        .message.error {
-            background: rgba(220, 38, 38, 0.1);
-            color: var(--danger);
-        }
-
-        .message.success {
-            background: rgba(15, 157, 88, 0.15);
-            color: var(--success);
-        }
-
-        .invite-tools {
-            margin-top: 2.5rem;
-            border-top: 1px solid var(--surface-muted);
-            padding-top: 2.5rem;
-            display: grid;
-            gap: 1.5rem;
-        }
-
-        .invite-tools textarea {
-            min-height: 90px;
-        }
-
-        .share-row {
-            display: flex;
-            gap: 0.75rem;
-        }
-
-        .share-row input {
-            flex: 1;
-            font-weight: 500;
-        }
-
-        .helper {
-            margin: 0.35rem 0 0;
-            font-size: 0.85rem;
-            color: rgba(15, 23, 42, 0.68);
-        }
-
-        .preview-card {
-            position: relative;
-            border-radius: 24px;
-            overflow: hidden;
-            display: grid;
-            gap: 0;
-            min-height: 100%;
-            box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
-            background: #ffffff;
-        }
-
-        .cover {
-            min-height: 200px;
-            background: linear-gradient(135deg, rgba(96, 165, 250, 0.9), rgba(14, 116, 144, 0.85)), url('https://images.unsplash.com/photo-1525182008055-f88b95ff7980?auto=format&fit=crop&w=1200&q=80') center/cover;
-            display: flex;
-            align-items: flex-end;
-            padding: 2rem;
-            color: white;
-        }
-
-        .cover h3 {
-            margin: 0;
-            font-size: clamp(1.8rem, 3vw, 2.4rem);
-            text-shadow: 0 10px 25px rgba(15, 23, 42, 0.3);
-        }
-
-        .event-content {
-            padding: clamp(1.8rem, 3vw, 2.3rem);
-            display: grid;
-            gap: 1.4rem;
-            background: inherit;
-        }
-
-        .event-meta {
-            display: grid;
-            gap: 0.5rem;
-            font-size: 0.95rem;
-        }
-
-        .event-meta span {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-
-        .event-description {
-            line-height: 1.6;
-            white-space: pre-wrap;
-        }
-
-        .rsvp-section {
-            margin-top: 2rem;
-            background: rgba(15, 23, 42, 0.04);
-            border-radius: 18px;
-            padding: 1.8rem;
-            display: grid;
-            gap: 1.3rem;
-        }
-
-        .rsvp-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-        }
-
-        .rsvp-actions button {
-            flex: 1;
-            min-width: 120px;
-            justify-content: center;
-        }
-
-        .rsvp-list {
-            display: grid;
-            gap: 1.5rem;
-        }
-
-        .rsvp-group {
-            background: white;
-            border-radius: 16px;
-            padding: 1.2rem 1.4rem;
-            border: 1px solid var(--surface-muted);
-            display: grid;
-            gap: 0.8rem;
-        }
-
-        .rsvp-group header {
-            position: static;
-            background: none;
-            color: inherit;
-            box-shadow: none;
-            padding: 0;
-        }
-
-        .rsvp-group h4 {
-            margin: 0;
-            font-size: 1.05rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .rsvp-group ul {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: grid;
-            gap: 0.45rem;
-        }
-
-        .rsvp-group li {
-            display: flex;
-            justify-content: space-between;
-            gap: 1rem;
-            font-size: 0.95rem;
-        }
-
-        .rsvp-group li span {
-            opacity: 0.7;
-            font-size: 0.85rem;
-        }
-
-        .empty-state {
-            padding: 1rem;
-            background: rgba(37, 99, 235, 0.08);
-            border-radius: 12px;
-            text-align: center;
-            color: rgba(15, 23, 42, 0.6);
-        }
-
-        @media (max-width: 900px) {
-            header {
-                position: static;
-            }
-        }
-
-        @media (max-width: 720px) {
-            .share-row {
-                flex-direction: column;
-            }
-
-            .share-row button {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .rsvp-actions button {
-                flex: 1 1 45%;
-            }
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <h1>Event Studio</h1>
-        <p>Skapa, anpassa och dela dina event på några minuter. Välj färger och typsnitt, lägg till en omslagsbild och bjud enkelt in dina gäster.</p>
-    </header>
-    <main>
-        <section aria-labelledby="form-title">
-            <h2 id="form-title"><span>1</span> Bygg ditt event</h2>
-            <form id="eventForm">
-                <div class="field-group">
-                    <div>
-                        <label for="eventName">Eventnamn</label>
-                        <input type="text" id="eventName" name="eventName" placeholder="Spelkväll med vänner" required>
-                    </div>
-                    <div class="time-grid">
-                        <div>
-                            <label for="startTime">Starttid</label>
-                            <input type="datetime-local" id="startTime" name="startTime" required>
-                        </div>
-                        <div>
-                            <label for="endTime">Sluttid</label>
-                            <input type="datetime-local" id="endTime" name="endTime" required>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="description">Beskrivning</label>
-                        <textarea id="description" name="description" placeholder="Beskriv vad som händer, vad gästerna ska ta med och annan viktig information." required></textarea>
-                    </div>
-                    <div class="style-grid">
-                        <div>
-                            <label for="backgroundColor">Bakgrundsfärg</label>
-                            <input type="color" id="backgroundColor" name="backgroundColor" value="#f8fafc">
-                        </div>
-                        <div>
-                            <label for="textColor">Textfärg</label>
-                            <input type="color" id="textColor" name="textColor" value="#0f172a">
-                        </div>
-                        <div>
-                            <label for="fontFamily">Typsnitt</label>
-                            <select id="fontFamily" name="fontFamily">
-                                <option value="'Inter', sans-serif">Inter (modern)</option>
-                                <option value="'Poppins', sans-serif">Poppins (rund)</option>
-                                <option value="'Playfair Display', serif">Playfair Display (elegant)</option>
-                                <option value="'Roboto Mono', monospace">Roboto Mono (teknisk)</option>
-                                <option value="'Georgia', serif">Georgia (klassisk)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="coverImage">Omslagsbild</label>
-                        <input type="file" id="coverImage" name="coverImage" accept="image/*">
-                        <p class="helper">Ladda upp en bild (JPG eller PNG) för att sätta stämningen.</p>
-                    </div>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="primary" aria-label="Uppdatera eventet">Uppdatera event</button>
-                </div>
-                <div class="message" id="formMessage" role="alert"></div>
-            </form>
-
-            <div class="invite-tools" aria-labelledby="invite-title">
-                <h2 id="invite-title"><span>2</span> Bjud in gäster</h2>
-                <div>
-                    <label for="inviteEmails">Mejladresser</label>
-                    <textarea id="inviteEmails" placeholder="Skriv eller klistra in adresser separerade med kommatecken eller radbrytningar."></textarea>
-                    <p class="helper">Vi öppnar ditt e-postprogram så att du kan skicka en färdig inbjudan.</p>
-                </div>
-                <button type="button" class="primary" id="sendInvites">Skicka mejlinbjudan</button>
-                <div class="message" id="inviteMessage" role="status"></div>
-                <div>
-                    <label for="shareLink">Delningslänk</label>
-                    <div class="share-row">
-                        <input type="text" id="shareLink" readonly aria-describedby="share-help" value="">
-                        <button type="button" class="secondary" id="copyShare">Kopiera länk</button>
-                    </div>
-                    <p class="helper" id="share-help">Länken leder direkt till ditt event så att gäster kan tacka ja, nej eller kanske.</p>
-                    <div class="message" id="shareMessage" role="status"></div>
-                </div>
-            </div>
-        </section>
-
-        <section aria-labelledby="preview-title">
-            <h2 id="preview-title"><span>3</span> Förhandsgranska &amp; svara</h2>
-            <article class="preview-card" id="eventPreview">
-                <div class="cover" id="coverPreview">
-                    <h3 id="previewTitle">Spelkväll med vänner</h3>
-                </div>
-                <div class="event-content" id="eventContent">
-                    <div class="event-meta" id="eventMeta">
-                        <span id="previewTime">Fredag 19 maj 2024 kl. 18:00 – 22:00</span>
-                    </div>
-                    <div class="event-description" id="previewDescription">Planera för en kväll med brädspel, snacks och skratt. Ta gärna med ett favoritspel!</div>
-                    <section class="rsvp-section" aria-labelledby="rsvp-title">
-                        <h3 id="rsvp-title">OSA direkt här</h3>
-                        <p>Fyll i ditt namn (och mejl om du vill få bekräftelse) och välj sedan om du kommer, kanske eller inte kan delta.</p>
-                        <div class="field-group">
-                            <div>
-                                <label for="rsvpName">Namn</label>
-                                <input type="text" id="rsvpName" placeholder="Ditt namn">
-                            </div>
-                            <div>
-                                <label for="rsvpEmail">Mejl (valfritt)</label>
-                                <input type="email" id="rsvpEmail" placeholder="namn@example.se">
-                            </div>
-                        </div>
-                        <div class="rsvp-actions">
-                            <button type="button" class="primary" data-status="yes">Jag kommer</button>
-                            <button type="button" class="secondary" data-status="maybe">Kanske</button>
-                            <button type="button" class="danger" data-status="no">Kan tyvärr inte</button>
-                        </div>
-                        <div class="message" id="rsvpMessage" role="status" aria-live="polite"></div>
-                        <div class="rsvp-list" id="rsvpList">
-                            <div class="empty-state">Inga svar ännu. Dela länken eller skicka en inbjudan för att börja samla svar.</div>
-                        </div>
-                    </section>
-                </div>
-            </article>
-        </section>
-    </main>
-
-    <template id="rsvpGroupTemplate">
-        <div class="rsvp-group">
-            <h4></h4>
-            <ul></ul>
-        </div>
-    </template>
-
-    <script>
-        const eventForm = document.getElementById('eventForm');
-        const eventNameInput = document.getElementById('eventName');
-        const startTimeInput = document.getElementById('startTime');
-        const endTimeInput = document.getElementById('endTime');
-        const descriptionInput = document.getElementById('description');
-        const backgroundColorInput = document.getElementById('backgroundColor');
-        const textColorInput = document.getElementById('textColor');
-        const fontFamilySelect = document.getElementById('fontFamily');
-        const coverImageInput = document.getElementById('coverImage');
-        const formMessage = document.getElementById('formMessage');
-
-        const coverPreview = document.getElementById('coverPreview');
-        const previewTitle = document.getElementById('previewTitle');
-        const previewTime = document.getElementById('previewTime');
-        const previewDescription = document.getElementById('previewDescription');
-        const eventContent = document.getElementById('eventContent');
-        const shareLinkInput = document.getElementById('shareLink');
-        const shareMessage = document.getElementById('shareMessage');
-
-        const inviteEmailsInput = document.getElementById('inviteEmails');
-        const sendInvitesButton = document.getElementById('sendInvites');
-        const inviteMessage = document.getElementById('inviteMessage');
-
-        const rsvpNameInput = document.getElementById('rsvpName');
-        const rsvpEmailInput = document.getElementById('rsvpEmail');
-        const rsvpMessage = document.getElementById('rsvpMessage');
-        const rsvpList = document.getElementById('rsvpList');
-
-        const rsvpButtons = document.querySelectorAll('.rsvp-actions button');
-        const rsvpSection = document.querySelector('.rsvp-section');
-        const rsvpGroupTemplate = document.getElementById('rsvpGroupTemplate');
-
-        const rsvpRegistry = new Map();
-        let currentCoverImage = null;
-
-        const statusLabels = {
-            yes: 'Kommer',
-            maybe: 'Kanske',
-            no: 'Kan inte'
-        };
-
-        const formatter = new Intl.DateTimeFormat('sv-SE', {
-            dateStyle: 'full',
-            timeStyle: 'short'
-        });
-        const timeFormatter = new Intl.DateTimeFormat('sv-SE', { timeStyle: 'short' });
-
-        function formatSingleDateTime(value) {
-            if (!value) {
-                return '';
-            }
-            const date = new Date(value);
-            if (Number.isNaN(date.getTime())) {
-                return '';
-            }
-            return formatter.format(date);
-        }
-
-        function withAlpha(hex, alpha) {
-            if (typeof hex !== 'string' || !hex.startsWith('#')) {
-                return hex;
-            }
-            let normalized = hex.slice(1);
-            if (normalized.length === 3) {
-                normalized = normalized.split('').map(char => char + char).join('');
-            }
-            if (normalized.length !== 6) {
-                return hex;
-            }
-            const r = parseInt(normalized.slice(0, 2), 16);
-            const g = parseInt(normalized.slice(2, 4), 16);
-            const b = parseInt(normalized.slice(4, 6), 16);
-            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-        }
-
-        function formatTimeRange(start, end) {
-            try {
-                const startDate = start ? new Date(start) : null;
-                const endDate = end ? new Date(end) : null;
-
-                if (!startDate || Number.isNaN(startDate.getTime())) {
-                    return 'Ange starttid';
-                }
-
-                if (!endDate || Number.isNaN(endDate.getTime())) {
-                    return formatter.format(startDate);
-                }
-
-                const sameDay = startDate.toDateString() === endDate.toDateString();
-                if (sameDay) {
-                    return `${formatter.format(startDate)} – ${timeFormatter.format(endDate)}`;
-                }
-
-                return `${formatter.format(startDate)} – ${formatter.format(endDate)}`;
-            } catch (error) {
-                return 'Tid ej tillgänglig';
-            }
-        }
-
-        function showFormMessage(type, text) {
-            formMessage.textContent = text;
-            formMessage.className = `message ${type} visible`;
-        }
-
-        function updateShareLink() {
-            const params = new URLSearchParams();
-            if (eventNameInput.value) {
-                params.set('name', eventNameInput.value);
-            }
-            if (startTimeInput.value) {
-                params.set('start', startTimeInput.value);
-            }
-            if (endTimeInput.value) {
-                params.set('end', endTimeInput.value);
-            }
-            if (descriptionInput.value) {
-                params.set('description', descriptionInput.value);
-            }
-            const query = params.toString();
-            const base = `${window.location.origin}${window.location.pathname}`;
-            const url = query ? `${base}?${query}` : base;
-            shareLinkInput.value = url;
-        }
-
-        function updatePreview() {
-            const rawName = eventNameInput.value.trim();
-            const name = rawName || 'Ditt event';
-            previewTitle.textContent = name;
-            previewTitle.style.fontFamily = fontFamilySelect.value;
-            coverPreview.style.fontFamily = fontFamilySelect.value;
-
-            eventContent.style.backgroundColor = backgroundColorInput.value;
-            eventContent.style.color = textColorInput.value;
-            eventContent.style.fontFamily = fontFamilySelect.value;
-            rsvpSection.style.backgroundColor = withAlpha(backgroundColorInput.value, 0.25);
-            rsvpSection.style.color = textColorInput.value;
-
-            const timeText = formatTimeRange(startTimeInput.value, endTimeInput.value);
-            previewTime.textContent = timeText;
-
-            const description = descriptionInput.value.trim() || 'Berätta vad som händer under ditt event.';
-            previewDescription.textContent = description;
-
-            if (currentCoverImage) {
-                coverPreview.style.backgroundImage = `linear-gradient(135deg, rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.15)), url('${currentCoverImage}')`;
-            } else {
-                coverPreview.style.removeProperty('background-image');
-                coverPreview.style.removeProperty('background-color');
-            }
-
-            applyRSVPStyling();
-            document.title = rawName ? `${name} | Event Studio` : 'Event Studio';
-            updateShareLink();
-        }
-
-        function handleCoverImage(file) {
-            if (!file) {
-                currentCoverImage = null;
-                coverPreview.style.removeProperty('background-image');
-                coverPreview.style.removeProperty('background-color');
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = event => {
-                currentCoverImage = event.target.result;
-                coverPreview.style.backgroundImage = `linear-gradient(135deg, rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.15)), url('${currentCoverImage}')`;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        eventForm.addEventListener('submit', event => {
-            event.preventDefault();
-            if (!eventForm.reportValidity()) {
-                return;
-            }
-
-            const start = startTimeInput.value;
-            const end = endTimeInput.value;
-            if (start && end && new Date(end) < new Date(start)) {
-                showFormMessage('error', 'Sluttiden måste vara efter starttiden.');
-                return;
-            }
-
-            showFormMessage('success', 'Eventet uppdaterades. Dela det med dina gäster!');
-            updatePreview();
-        });
-
-        coverImageInput.addEventListener('change', event => {
-            const [file] = event.target.files;
-            if (file) {
-                if (!file.type.startsWith('image/')) {
-                    showFormMessage('error', 'Välj en bildfil (JPG eller PNG).');
-                    event.target.value = '';
-                    return;
-                }
-                handleCoverImage(file);
-            } else {
-                handleCoverImage(null);
-            }
-        });
-
-        [eventNameInput, startTimeInput, endTimeInput, descriptionInput, backgroundColorInput, textColorInput, fontFamilySelect].forEach(element => {
-            element.addEventListener('input', () => {
-                if (formMessage.classList.contains('success')) {
-                    formMessage.classList.remove('visible');
-                }
-                updatePreview();
-            });
-        });
-
-        function parseInvitees(input) {
-            return input
-                .split(/[\n,;]+/)
-                .map(email => email.trim())
-                .filter(Boolean);
-        }
-
-        function buildEmailBody(url) {
-            const lines = [
-                `Hej!`,
-                '',
-                `Du är inbjuden till ${eventNameInput.value || 'mitt event'}.`,
-                `Start: ${formatSingleDateTime(startTimeInput.value) || 'Ange tid'}`,
-                `Slut: ${formatSingleDateTime(endTimeInput.value) || 'Ange tid'}`,
-                '',
-                descriptionInput.value || '',
-                '',
-                `OSA och hitta mer information här: ${url}`,
-                '',
-                'Ser fram emot att ses!'
-            ];
-            return lines.join('\n');
-        }
-
-        sendInvitesButton.addEventListener('click', () => {
-            const invitees = parseInvitees(inviteEmailsInput.value);
-            if (!invitees.length) {
-                inviteMessage.textContent = 'Lägg till minst en mejladress för att kunna skicka en inbjudan.';
-                inviteMessage.className = 'message error visible';
-                return;
-            }
-
-            const recipients = invitees.join(',');
-            const params = new URLSearchParams({
-                subject: `Inbjudan: ${eventNameInput.value || 'Event'}`,
-                body: buildEmailBody(shareLinkInput.value || window.location.href)
-            });
-            window.location.href = `mailto:${recipients}?${params.toString()}`;
-
-            inviteMessage.textContent = 'Vi har öppnat ditt e-postprogram med en färdig inbjudan.';
-            inviteMessage.className = 'message success visible';
-        });
-
-        inviteEmailsInput.addEventListener('input', () => {
-            inviteMessage.textContent = '';
-            inviteMessage.className = 'message';
-        });
-
-        document.getElementById('copyShare').addEventListener('click', async () => {
-            updateShareLink();
-            try {
-                await navigator.clipboard.writeText(shareLinkInput.value);
-                shareMessage.textContent = 'Delningslänken kopierades till urklipp.';
-                shareMessage.className = 'message success visible';
-            } catch (error) {
-                shareLinkInput.removeAttribute('readonly');
-                shareLinkInput.select();
-                shareLinkInput.setSelectionRange(0, shareLinkInput.value.length);
-                shareLinkInput.setAttribute('readonly', 'readonly');
-                shareLinkInput.blur();
-                shareMessage.textContent = 'Kunde inte kopiera automatiskt. Kopiera gärna manuellt.';
-                shareMessage.className = 'message error visible';
-            }
-        });
-
-        function applyRSVPStyling() {
-            const textColor = textColorInput.value || '#0f172a';
-            const groupBackground = withAlpha(textColor, 0.08);
-            const groupBorder = withAlpha(textColor, 0.2);
-            rsvpSection.querySelectorAll('.rsvp-group').forEach(group => {
-                group.style.backgroundColor = groupBackground;
-                group.style.borderColor = groupBorder;
-                group.style.color = textColor;
-            });
-            const emptyState = rsvpSection.querySelector('.empty-state');
-            if (emptyState) {
-                emptyState.style.color = textColor;
-                emptyState.style.backgroundColor = withAlpha(textColor, 0.12);
-            }
-        }
-
-        function updateRSVPList() {
-            rsvpList.innerHTML = '';
-            if (!rsvpRegistry.size) {
-                const empty = document.createElement('div');
-                empty.className = 'empty-state';
-                empty.textContent = 'Inga svar ännu. Dela länken eller skicka en inbjudan för att börja samla svar.';
-                rsvpList.appendChild(empty);
-                applyRSVPStyling();
-                return;
-            }
-
-            ['yes', 'maybe', 'no'].forEach(status => {
-                const entries = Array.from(rsvpRegistry.values()).filter(entry => entry.status === status);
-                if (!entries.length) {
-                    return;
-                }
-                const group = rsvpGroupTemplate.content.firstElementChild.cloneNode(true);
-                const header = group.querySelector('h4');
-                const list = group.querySelector('ul');
-                header.textContent = `${statusLabels[status]} (${entries.length})`;
-                entries.forEach(entry => {
-                    const item = document.createElement('li');
-                    const name = document.createElement('span');
-                    name.textContent = entry.name;
-                    item.appendChild(name);
-                    if (entry.email) {
-                        const email = document.createElement('span');
-                        email.textContent = entry.email;
-                        item.appendChild(email);
-                    }
-                    list.appendChild(item);
-                });
-                rsvpList.appendChild(group);
-            });
-            applyRSVPStyling();
-        }
-
-        function handleRSVP(status) {
-            const name = rsvpNameInput.value.trim();
-            const email = rsvpEmailInput.value.trim();
-
-            if (!name) {
-                rsvpMessage.textContent = 'Skriv in ditt namn för att lämna ett svar.';
-                rsvpMessage.className = 'message error visible';
-                return;
-            }
-
-            const key = (email || name).toLowerCase();
-            rsvpRegistry.set(key, { name, email, status });
-            updateRSVPList();
-
-            rsvpMessage.textContent = `Tack ${name}! Vi har sparat ditt svar: ${statusLabels[status].toLowerCase()}.`;
-            rsvpMessage.className = 'message success visible';
-
-            rsvpNameInput.value = '';
-            rsvpEmailInput.value = '';
-        }
-
-        rsvpButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                handleRSVP(button.dataset.status);
-            });
-        });
-
-        function hydrateFromURL() {
-            const params = new URLSearchParams(window.location.search);
-            if (!params.size) {
-                updateShareLink();
-                return;
-            }
-
-            if (params.get('name')) {
-                eventNameInput.value = params.get('name');
-            }
-            if (params.get('start')) {
-                startTimeInput.value = params.get('start');
-            }
-            if (params.get('end')) {
-                endTimeInput.value = params.get('end');
-            }
-            if (params.get('description')) {
-                descriptionInput.value = params.get('description');
-            }
-
-            updatePreview();
-        }
-
-        hydrateFromURL();
-    </script>
-</body>
-</html>
++<!doctype html>
++<html lang="en">
++  <head>
++    <meta charset="UTF-8" />
++    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
++    <title>Event Studio</title>
++    <link rel="preconnect" href="https://fonts.googleapis.com" />
++    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
++    <link
++      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600&display=swap"
++      rel="stylesheet"
++    />
++    <style>
++      :root {
++        color-scheme: only light;
++        font-family:
++          "Inter",
++          system-ui,
++          -apple-system,
++          BlinkMacSystemFont,
++          "Segoe UI",
++          sans-serif;
++        --page-bg: #ecf2ff;
++        --page-gradient: linear-gradient(
++          130deg,
++          #eef2ff,
++          #e0f2ff 45%,
++          #f8f9ff 90%
++        );
++        --panel-bg: rgba(255, 255, 255, 0.92);
++        --panel-border: rgba(15, 23, 42, 0.08);
++        --panel-glow: rgba(99, 102, 241, 0.18);
++        --primary: #4f46e5;
++        --primary-strong: #4338ca;
++        --primary-soft: rgba(79, 70, 229, 0.12);
++        --text: #0f172a;
++        --text-muted: rgba(15, 23, 42, 0.62);
++        --success: #0f9d58;
++        --danger: #dc2626;
++        --card-radius: 26px;
++      }
+ 
++      * {
++        box-sizing: border-box;
++      }
++
++      body {
++        margin: 0;
++        min-height: 100vh;
++        display: flex;
++        flex-direction: column;
++        align-items: center;
++        background: var(--page-gradient);
++        color: var(--text);
++        position: relative;
++        overflow-x: hidden;
++      }
++
++      body::before,
++      body::after {
++        content: "";
++        position: absolute;
++        width: 520px;
++        height: 520px;
++        background: radial-gradient(
++          circle,
++          rgba(99, 102, 241, 0.25),
++          transparent 65%
++        );
++        z-index: 0;
++        filter: blur(0px);
++      }
++
++      body::before {
++        top: -240px;
++        left: -220px;
++      }
++
++      body::after {
++        bottom: -260px;
++        right: -220px;
++      }
++
++      .page-shell {
++        width: min(1220px, 94vw);
++        margin: clamp(2rem, 5vw, 3rem) auto clamp(2.5rem, 6vw, 3.5rem);
++        position: relative;
++        z-index: 1;
++      }
++
++      header {
++        display: grid;
++        gap: 1.2rem;
++        padding: clamp(1.8rem, 4vw, 2.8rem);
++        border-radius: var(--card-radius);
++        position: relative;
++        color: white;
++      }
++
++      header::before {
++        content: "";
++        position: absolute;
++        inset: 0;
++        border-radius: inherit;
++        background: linear-gradient(
++          130deg,
++          rgba(15, 23, 42, 0.88),
++          rgba(79, 70, 229, 0.78)
++        );
++        box-shadow: 0 38px 70px rgba(15, 23, 42, 0.28);
++      }
++
++      header * {
++        position: relative;
++        z-index: 1;
++      }
++
++      header h1 {
++        margin: 0;
++        font-size: clamp(2.25rem, 5vw, 3.2rem);
++        letter-spacing: -0.02em;
++        font-family: "Playfair Display", "Inter", serif;
++      }
++
++      header p {
++        margin: 0;
++        font-size: clamp(1rem, 2.3vw, 1.2rem);
++        line-height: 1.6;
++        color: rgba(241, 245, 255, 0.8);
++        max-width: 46rem;
++      }
++
++      .hero-badges {
++        display: flex;
++        gap: 0.75rem;
++        flex-wrap: wrap;
++      }
++
++      .hero-badges span {
++        display: inline-flex;
++        align-items: center;
++        gap: 0.45rem;
++        padding: 0.5rem 0.95rem;
++        background: rgba(255, 255, 255, 0.16);
++        border-radius: 999px;
++        font-size: 0.85rem;
++        letter-spacing: 0.05em;
++        text-transform: uppercase;
++      }
++
++      main {
++        margin-top: clamp(2rem, 5vw, 3.2rem);
++        display: grid;
++        gap: clamp(2rem, 4vw, 2.8rem);
++        grid-template-columns: minmax(0, 1fr);
++      }
++
++      @media (min-width: 980px) {
++        main {
++          grid-template-columns: 1.08fr 0.92fr;
++        }
++      }
++
++      section.panel {
++        background: var(--panel-bg);
++        border-radius: var(--card-radius);
++        padding: clamp(1.8rem, 3.5vw, 2.6rem);
++        border: 1px solid var(--panel-border);
++        box-shadow: 0 28px 55px rgba(15, 23, 42, 0.16);
++        backdrop-filter: blur(18px);
++        position: relative;
++      }
++
++      section.panel::before {
++        content: "";
++        position: absolute;
++        inset: 14px;
++        border-radius: calc(var(--card-radius) - 12px);
++        border: 1px solid rgba(255, 255, 255, 0.45);
++        pointer-events: none;
++      }
++
++      section.panel h2 {
++        margin: 0 0 1.8rem;
++        font-size: clamp(1.35rem, 2.5vw, 1.6rem);
++        display: flex;
++        align-items: center;
++        gap: 0.75rem;
++      }
++
++      section.panel h2 span {
++        display: inline-flex;
++        align-items: center;
++        justify-content: center;
++        width: 2.4rem;
++        height: 2.4rem;
++        border-radius: 0.95rem;
++        background: linear-gradient(
++          135deg,
++          var(--primary),
++          var(--primary-strong)
++        );
++        color: white;
++        font-weight: 600;
++        box-shadow: 0 14px 26px rgba(79, 70, 229, 0.28);
++      }
++
++      form {
++        display: grid;
++        gap: 1.5rem;
++      }
++
++      label {
++        display: block;
++        font-weight: 600;
++        margin-bottom: 0.55rem;
++        color: var(--text);
++      }
++
++      input[type="text"],
++      input[type="datetime-local"],
++      input[type="email"],
++      input[type="url"],
++      input[type="file"],
++      textarea,
++      select {
++        width: 100%;
++        font: inherit;
++        padding: 0.85rem 1.1rem;
++        border-radius: 14px;
++        border: 1px solid rgba(15, 23, 42, 0.18);
++        background: rgba(255, 255, 255, 0.95);
++        box-shadow:
++          inset 0 0 0 1px rgba(255, 255, 255, 0.6),
++          0 8px 18px rgba(15, 23, 42, 0.08);
++        transition:
++          border 0.2s ease,
++          box-shadow 0.2s ease,
++          transform 0.2s ease;
++      }
++
++      textarea {
++        min-height: 140px;
++        resize: vertical;
++      }
++
++      input:focus,
++      textarea:focus,
++      select:focus {
++        outline: none;
++        border-color: var(--primary);
++        box-shadow: 0 16px 28px rgba(79, 70, 229, 0.24);
++        transform: translateY(-1px);
++      }
++
++      input[type="color"] {
++        padding: 0;
++        border-radius: 12px;
++        height: 52px;
++        cursor: pointer;
++        border: none;
++        box-shadow:
++          inset 0 0 0 1px rgba(15, 23, 42, 0.14),
++          0 8px 18px rgba(15, 23, 42, 0.15);
++      }
++
++      .field-grid {
++        display: grid;
++        gap: 1.4rem;
++      }
++
++      .field-grid.two-col {
++        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
++      }
++
++      .field-grid.three-col {
++        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
++      }
++
++      button {
++        border: none;
++        border-radius: 14px;
++        padding: 0.85rem 1.25rem;
++        font: inherit;
++        font-weight: 600;
++        cursor: pointer;
++        display: inline-flex;
++        align-items: center;
++        justify-content: center;
++        gap: 0.6rem;
++        transition:
++          transform 0.18s ease,
++          box-shadow 0.25s ease;
++      }
++
++      button.primary {
++        background: linear-gradient(
++          135deg,
++          var(--primary),
++          var(--primary-strong)
++        );
++        color: white;
++        box-shadow: 0 20px 36px rgba(79, 70, 229, 0.32);
++      }
++
++      button.secondary {
++        background: rgba(79, 70, 229, 0.14);
++        color: var(--primary-strong);
++        box-shadow: inset 0 0 0 1px rgba(79, 70, 229, 0.32);
++      }
++
++      button.danger {
++        background: rgba(220, 38, 38, 0.12);
++        color: var(--danger);
++        box-shadow: inset 0 0 0 1px rgba(220, 38, 38, 0.3);
++      }
++
++      button:hover {
++        transform: translateY(-1px) scale(1.01);
++      }
++
++      button:active {
++        transform: translateY(0);
++      }
++
++      .form-actions {
++        display: flex;
++        justify-content: flex-end;
++      }
++
++      .message {
++        display: none;
++        margin-top: 1rem;
++        padding: 0.9rem 1.1rem;
++        border-radius: 12px;
++        font-size: 0.95rem;
++      }
++
++      .message.visible {
++        display: block;
++      }
++
++      .message.success {
++        background: rgba(15, 157, 88, 0.16);
++        color: var(--success);
++        border: 1px solid rgba(15, 157, 88, 0.28);
++      }
++
++      .message.error {
++        background: rgba(220, 38, 38, 0.14);
++        color: var(--danger);
++        border: 1px solid rgba(220, 38, 38, 0.28);
++      }
++
++      .invite-tools {
++        margin-top: 2.6rem;
++        padding-top: 2.4rem;
++        border-top: 1px solid rgba(15, 23, 42, 0.08);
++        display: grid;
++        gap: 1.6rem;
++      }
++
++      .share-row {
++        display: flex;
++        gap: 0.85rem;
++      }
++
++      .share-row input {
++        flex: 1;
++        font-weight: 500;
++      }
++
++      .helper {
++        margin: 0;
++        font-size: 0.85rem;
++        color: var(--text-muted);
++      }
++
++      .preview-shell {
++        padding: 0;
++        background: transparent;
++        box-shadow: none;
++      }
++
++      .preview-shell::before {
++        display: none;
++      }
++
++      .event-preview {
++        position: relative;
++        border-radius: calc(var(--card-radius) + 4px);
++        overflow: hidden;
++        display: grid;
++        gap: 0;
++        background: white;
++        box-shadow: 0 45px 80px rgba(15, 23, 42, 0.26);
++      }
++
++      .event-cover {
++        min-height: 220px;
++        background:
++          linear-gradient(
++            135deg,
++            rgba(79, 70, 229, 0.85),
++            rgba(14, 165, 233, 0.85)
++          ),
++          url("https://images.unsplash.com/photo-1525182008055-f88b95ff7980?auto=format&fit=crop&w=1600&q=80")
++            center/cover;
++        display: flex;
++        align-items: flex-end;
++        padding: clamp(1.8rem, 3.5vw, 2.6rem);
++        color: white;
++        position: relative;
++      }
++
++      .event-cover::before {
++        content: "";
++        position: absolute;
++        inset: 0;
++        background: linear-gradient(
++          160deg,
++          rgba(15, 23, 42, 0.68),
++          rgba(15, 23, 42, 0.18)
++        );
++      }
++
++      .event-cover h3 {
++        margin: 0;
++        font-size: clamp(2rem, 4vw, 2.5rem);
++        letter-spacing: -0.02em;
++        position: relative;
++        z-index: 1;
++      }
++
++      .event-body {
++        padding: clamp(1.8rem, 3.5vw, 2.6rem);
++        display: grid;
++        gap: 1.4rem;
++      }
++
++      .event-meta {
++        display: grid;
++        gap: 0.7rem;
++      }
++
++      .meta-line {
++        display: inline-flex;
++        align-items: center;
++        gap: 0.65rem;
++        padding: 0.65rem 0.85rem;
++        border-radius: 14px;
++        background: rgba(15, 23, 42, 0.05);
++        color: inherit;
++      }
++
++      .meta-line svg {
++        width: 20px;
++        height: 20px;
++        color: var(--primary-strong);
++      }
++
++      .event-description {
++        line-height: 1.65;
++        white-space: pre-wrap;
++      }
++
++      .rsvp-card {
++        border-radius: 20px;
++        padding: clamp(1.5rem, 3vw, 2rem);
++        background: var(--primary-soft);
++        border: 1px solid rgba(79, 70, 229, 0.28);
++        display: grid;
++        gap: 1.3rem;
++      }
++
++      .rsvp-card h3 {
++        margin: 0;
++        font-size: 1.2rem;
++      }
++
++      .rsvp-card p {
++        margin: 0;
++        color: var(--text-muted);
++        line-height: 1.5;
++      }
++
++      .rsvp-actions {
++        display: flex;
++        flex-wrap: wrap;
++        gap: 0.85rem;
++      }
++
++      .rsvp-actions button {
++        flex: 1;
++        min-width: 130px;
++      }
++
++      .rsvp-list {
++        display: grid;
++        gap: 1.3rem;
++      }
++
++      .rsvp-group {
++        background: rgba(255, 255, 255, 0.68);
++        border-radius: 18px;
++        padding: 1.2rem 1.4rem;
++        border: 1px solid rgba(79, 70, 229, 0.18);
++        display: grid;
++        gap: 0.75rem;
++        box-shadow: 0 16px 30px rgba(79, 70, 229, 0.12);
++      }
++
++      .rsvp-group h4 {
++        margin: 0;
++        display: flex;
++        align-items: center;
++        gap: 0.55rem;
++        font-size: 1rem;
++      }
++
++      .rsvp-group ul {
++        list-style: none;
++        margin: 0;
++        padding: 0;
++        display: grid;
++        gap: 0.45rem;
++      }
++
++      .rsvp-group li {
++        padding: 0.35rem 0.6rem;
++        border-radius: 10px;
++        background: rgba(15, 23, 42, 0.04);
++        font-size: 0.95rem;
++      }
++
++      .empty-state {
++        text-align: center;
++        padding: 1.2rem 1rem;
++        border-radius: 14px;
++        background: rgba(255, 255, 255, 0.72);
++        border: 1px dashed rgba(79, 70, 229, 0.28);
++        color: var(--text-muted);
++      }
++
++      footer {
++        margin-top: 2.8rem;
++        font-size: 0.85rem;
++        color: rgba(15, 23, 42, 0.65);
++        text-align: center;
++      }
++
++      footer a {
++        color: inherit;
++      }
++    </style>
++  </head>
++  <body>
++    <div class="page-shell">
++      <header>
++        <h1>Design vibrant events in minutes</h1>
++        <p>
++          Craft the name, schedule, and story for your gathering, then tailor
++          the colours, type, and cover imagery to match the vibe. Share invites
++          over email and start collecting RSVPs instantly.
++        </p>
++        <div class="hero-badges">
++          <span>Live preview</span>
++          <span>Custom palette</span>
++          <span>Email invites</span>
++        </div>
++      </header>
++
++      <main>
++        <section class="panel builder" aria-labelledby="builder-heading">
++          <h2 id="builder-heading"><span>1</span> Build your event</h2>
++          <form id="eventForm">
++            <div>
++              <label for="eventName">Event name</label>
++              <input
++                type="text"
++                id="eventName"
++                placeholder="Game night with friends"
++                required
++              />
++            </div>
++            <div class="field-grid two-col">
++              <div>
++                <label for="startTime">Start time</label>
++                <input type="datetime-local" id="startTime" required />
++              </div>
++              <div>
++                <label for="endTime">End time</label>
++                <input type="datetime-local" id="endTime" required />
++              </div>
++            </div>
++            <div>
++              <label for="description">Description</label>
++              <textarea
++                id="description"
++                placeholder="Tell your guests what to expect, what to bring, or any other helpful details."
++                required
++              ></textarea>
++            </div>
++            <div class="field-grid three-col">
++              <div>
++                <label for="backgroundColor">Background colour</label>
++                <input type="color" id="backgroundColor" value="#4f46e5" />
++              </div>
++              <div>
++                <label for="textColor">Text colour</label>
++                <input type="color" id="textColor" value="#ffffff" />
++              </div>
++              <div>
++                <label for="fontFamily">Font</label>
++                <select id="fontFamily">
++                  <option value="'Inter', sans-serif" selected>Inter</option>
++                  <option value="'Poppins', sans-serif">Poppins</option>
++                  <option value="'Playfair Display', serif">
++                    Playfair Display
++                  </option>
++                  <option value="'Roboto Mono', monospace">Roboto Mono</option>
++                </select>
++              </div>
++            </div>
++            <div>
++              <label for="coverImage">Cover image</label>
++              <input type="file" id="coverImage" accept="image/*" />
++              <p class="helper">
++                Upload a hero image (recommended minimum width of 1200px).
++              </p>
++            </div>
++            <div class="form-actions">
++              <button type="submit" class="primary">Update preview</button>
++            </div>
++            <div
++              class="message"
++              id="formMessage"
++              role="status"
++              aria-live="polite"
++            ></div>
++          </form>
++
++          <section class="invite-tools" aria-labelledby="invite-heading">
++            <h3 id="invite-heading">Invite guests</h3>
++            <div>
++              <label for="inviteEmails">Email addresses</label>
++              <textarea
++                id="inviteEmails"
++                placeholder="Add one or more emails separated by commas"
++              ></textarea>
++              <p class="helper">
++                Use commas to separate recipients. Example: friend@example.com,
++                team@example.com
++              </p>
++            </div>
++            <div class="form-actions">
++              <button type="button" class="primary" id="sendInvites">
++                Send invites
++              </button>
++            </div>
++            <div
++              class="message"
++              id="inviteMessage"
++              role="status"
++              aria-live="polite"
++            ></div>
++
++            <div>
++              <label for="shareLink">Shareable link</label>
++              <div class="share-row">
++                <input type="url" id="shareLink" readonly />
++                <button type="button" class="secondary" id="copyLink">
++                  Copy link
++                </button>
++              </div>
++              <p class="helper">
++                Paste this link anywhere — text messages, group chats, or social
++                feeds.
++              </p>
++              <div
++                class="message"
++                id="shareMessage"
++                role="status"
++                aria-live="polite"
++              ></div>
++            </div>
++          </section>
++        </section>
++
++        <section class="panel preview-shell" aria-labelledby="preview-heading">
++          <h2 id="preview-heading"><span>2</span> Preview & RSVP</h2>
++          <article class="event-preview" id="eventPreview">
++            <div class="event-cover" id="coverPreview">
++              <h3 id="previewTitle">Game night with friends</h3>
++            </div>
++            <div class="event-body" id="eventContent">
++              <div class="event-meta" id="eventMeta">
++                <span class="meta-line">
++                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
++                    <path
++                      fill="currentColor"
++                      d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1.5A2.5 2.5 0 0 1 22 6.5v12A2.5 2.5 0 0 1 19.5 21h-15A2.5 2.5 0 0 1 2 18.5v-12A2.5 2.5 0 0 1 4.5 4H6V3a1 1 0 0 1 1-1Zm12.5 6h-15a.5.5 0 0 0-.5.5V10h16V8.5a.5.5 0 0 0-.5-.5Zm-15 11h15a.5.5 0 0 0 .5-.5V12h-16v6.5a.5.5 0 0 0 .5.5Z"
++                    />
++                  </svg>
++                  <span id="previewTime"
++                    >Friday, May 19, 2024 · 6:00 PM – 10:00 PM</span
++                  >
++                </span>
++              </div>
++              <div class="event-description" id="previewDescription">
++                Plan an evening of board games, snacks, and laughter. Feel free
++                to bring a favourite game!
++              </div>
++              <section class="rsvp-card" aria-labelledby="rsvp-heading">
++                <h3 id="rsvp-heading">RSVP right here</h3>
++                <p>
++                  Let the host know if you're coming. Add your name, email
++                  (optional), and choose your response.
++                </p>
++                <div class="field-grid two-col">
++                  <div>
++                    <label for="rsvpName">Name</label>
++                    <input type="text" id="rsvpName" placeholder="Your name" />
++                  </div>
++                  <div>
++                    <label for="rsvpEmail">Email (optional)</label>
++                    <input
++                      type="email"
++                      id="rsvpEmail"
++                      placeholder="name@example.com"
++                    />
++                  </div>
++                </div>
++                <div class="rsvp-actions">
++                  <button type="button" class="primary" data-status="yes">
++                    I'm going
++                  </button>
++                  <button type="button" class="secondary" data-status="maybe">
++                    Maybe
++                  </button>
++                  <button type="button" class="danger" data-status="no">
++                    Can't make it
++                  </button>
++                </div>
++                <div
++                  class="message"
++                  id="rsvpMessage"
++                  role="status"
++                  aria-live="polite"
++                ></div>
++                <div class="rsvp-list" id="rsvpList">
++                  <div class="empty-state">
++                    No responses yet. Share your link or send an invite to
++                    collect RSVPs.
++                  </div>
++                </div>
++              </section>
++            </div>
++          </article>
++        </section>
++      </main>
++
++      <footer>
++        Created by
++        <a href="https://www.chablasco.com" target="_blank" rel="noopener"
++          >Cha Blasco</a
++        >
++      </footer>
++    </div>
++
++    <template id="rsvpGroupTemplate">
++      <div class="rsvp-group">
++        <h4></h4>
++        <ul></ul>
++      </div>
++    </template>
++
++    <script>
++      const eventForm = document.getElementById("eventForm");
++      const eventNameInput = document.getElementById("eventName");
++      const startTimeInput = document.getElementById("startTime");
++      const endTimeInput = document.getElementById("endTime");
++      const descriptionInput = document.getElementById("description");
++      const backgroundColorInput = document.getElementById("backgroundColor");
++      const textColorInput = document.getElementById("textColor");
++      const fontFamilySelect = document.getElementById("fontFamily");
++      const coverImageInput = document.getElementById("coverImage");
++      const formMessage = document.getElementById("formMessage");
++
++      const coverPreview = document.getElementById("coverPreview");
++      const previewTitle = document.getElementById("previewTitle");
++      const previewTime = document.getElementById("previewTime");
++      const previewDescription = document.getElementById("previewDescription");
++      const eventContent = document.getElementById("eventContent");
++      const shareLinkInput = document.getElementById("shareLink");
++      const shareMessage = document.getElementById("shareMessage");
++
++      const inviteEmailsInput = document.getElementById("inviteEmails");
++      const sendInvitesButton = document.getElementById("sendInvites");
++      const inviteMessage = document.getElementById("inviteMessage");
++      const copyLinkButton = document.getElementById("copyLink");
++
++      const rsvpNameInput = document.getElementById("rsvpName");
++      const rsvpEmailInput = document.getElementById("rsvpEmail");
++      const rsvpMessage = document.getElementById("rsvpMessage");
++      const rsvpList = document.getElementById("rsvpList");
++      const rsvpButtons = document.querySelectorAll(".rsvp-actions button");
++      const rsvpCard = document.querySelector(".rsvp-card");
++      const rsvpGroupTemplate = document.getElementById("rsvpGroupTemplate");
++
++      const rsvpRegistry = new Map();
++      let currentCoverImage = null;
++
++      const statusLabels = {
++        yes: "Going",
++        maybe: "Maybe",
++        no: "Can't make it",
++      };
++
++      const formatter = new Intl.DateTimeFormat("en-US", {
++        dateStyle: "full",
++        timeStyle: "short",
++      });
++      const timeFormatter = new Intl.DateTimeFormat("en-US", {
++        timeStyle: "short",
++      });
++
++      function formatSingleDateTime(value) {
++        if (!value) return "";
++        const date = new Date(value);
++        if (Number.isNaN(date.getTime())) return "";
++        return formatter.format(date);
++      }
++
++      function withAlpha(hex, alpha) {
++        if (typeof hex !== "string" || !hex.startsWith("#")) return hex;
++        let normalized = hex.slice(1);
++        if (normalized.length === 3) {
++          normalized = normalized
++            .split("")
++            .map((char) => char + char)
++            .join("");
++        }
++        const num = parseInt(normalized, 16);
++        const r = (num >> 16) & 255;
++        const g = (num >> 8) & 255;
++        const b = num & 255;
++        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
++      }
++
++      function updatePreview() {
++        const name = eventNameInput.value.trim();
++        const description = descriptionInput.value.trim();
++        const backgroundColor = backgroundColorInput.value;
++        const textColor = textColorInput.value;
++        const fontFamily = fontFamilySelect.value;
++        const start = startTimeInput.value;
++        const end = endTimeInput.value;
++
++        if (name) {
++          previewTitle.textContent = name;
++        }
++
++        const startText = formatSingleDateTime(start);
++        const endText = formatSingleDateTime(end);
++        if (startText && endText) {
++          const startDate = new Date(start);
++          const endDate = new Date(end);
++          const sameDay = startDate.toDateString() === endDate.toDateString();
++          const timeRange = sameDay
++            ? `${timeFormatter.format(startDate)} – ${timeFormatter.format(endDate)}`
++            : `${formatter.format(startDate)} – ${formatter.format(endDate)}`;
++          const dayPart = sameDay
++            ? formatter.format(startDate).split("at")[0].trim()
++            : "";
++          previewTime.textContent = sameDay
++            ? `${dayPart} · ${timeRange}`
++            : timeRange;
++        } else if (startText) {
++          previewTime.textContent = startText;
++        }
++
++        if (description) {
++          previewDescription.textContent = description;
++        }
++
++        coverPreview.style.background = `linear-gradient(135deg, ${withAlpha(backgroundColor, 0.85)}, ${withAlpha(backgroundColor, 0.55)}), url('${currentCoverImage || "https://images.unsplash.com/photo-1525182008055-f88b95ff7980?auto=format&fit=crop&w=1600&q=80"}') center/cover`;
++        coverPreview.style.color = textColor;
++        coverPreview.style.fontFamily = fontFamily;
++        coverPreview.style.setProperty("--dynamic-text", textColor);
++
++        eventContent.style.setProperty("--dynamic-accent", backgroundColor);
++        eventContent.style.setProperty("--dynamic-text", textColor);
++        eventContent.style.fontFamily = fontFamily;
++        rsvpCard.style.setProperty("--dynamic-accent", backgroundColor);
++        rsvpCard.style.setProperty("--dynamic-text", textColor);
++
++        applyRSVPStyling();
++        updateShareLink();
++      }
++
++      function updateShareLink() {
++        const params = new URLSearchParams({
++          name: eventNameInput.value,
++          start: startTimeInput.value,
++          end: endTimeInput.value,
++          description: descriptionInput.value,
++        });
++        const hasOrigin =
++          window.location.origin && window.location.origin !== "null";
++        const base = hasOrigin
++          ? `${window.location.origin}${window.location.pathname}`
++          : window.location.href.split("?")[0];
++        const url = `${base}?${params.toString()}`;
++        shareLinkInput.value = url;
++      }
++
++      function applyRSVPStyling() {
++        const accent = backgroundColorInput.value;
++        const text = textColorInput.value;
++        const softAccent = withAlpha(accent, 0.12);
++        const borderAccent = withAlpha(accent, 0.3);
++        rsvpCard.style.background = softAccent;
++        rsvpCard.style.borderColor = borderAccent;
++        rsvpCard.style.color = "#0f172a";
++        rsvpCard.querySelectorAll("button.primary").forEach((button) => {
++          button.style.background = `linear-gradient(135deg, ${accent}, ${withAlpha(accent, 0.8)})`;
++          button.style.boxShadow = `0 18px 32px ${withAlpha(accent, 0.35)}`;
++          button.style.color = text;
++        });
++        rsvpCard.querySelectorAll("button.secondary").forEach((button) => {
++          button.style.background = withAlpha(accent, 0.14);
++          button.style.color = accent;
++          button.style.boxShadow = `inset 0 0 0 1px ${withAlpha(accent, 0.35)}`;
++        });
++      }
++
++      eventForm.addEventListener("submit", (event) => {
++        event.preventDefault();
++        updatePreview();
++        formMessage.textContent = "Preview updated successfully!";
++        formMessage.className = "message success visible";
++      });
++
++      coverImageInput.addEventListener("change", (event) => {
++        const [file] = event.target.files;
++        if (!file) {
++          currentCoverImage = null;
++          updatePreview();
++          return;
++        }
++        const reader = new FileReader();
++        reader.onload = (loadEvent) => {
++          currentCoverImage = loadEvent.target.result;
++          updatePreview();
++        };
++        reader.readAsDataURL(file);
++      });
++
++      backgroundColorInput.addEventListener("input", updatePreview);
++      textColorInput.addEventListener("input", updatePreview);
++      fontFamilySelect.addEventListener("change", updatePreview);
++
++      function validateEmails(value) {
++        const emails = value
++          .split(",")
++          .map((email) => email.trim())
++          .filter(Boolean);
++        if (!emails.length) {
++          inviteMessage.textContent =
++            "Add at least one email address to send invites.";
++          inviteMessage.className = "message error visible";
++          return null;
++        }
++        const invalid = emails.filter(
++          (email) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
++        );
++        if (invalid.length) {
++          inviteMessage.textContent = `These addresses look incorrect: ${invalid.join(", ")}.`;
++          inviteMessage.className = "message error visible";
++          return null;
++        }
++        return emails;
++      }
++
++      sendInvitesButton.addEventListener("click", () => {
++        const emails = validateEmails(inviteEmailsInput.value);
++        if (!emails) return;
++        inviteMessage.textContent = `Invites queued for ${emails.length} guest${emails.length === 1 ? "" : "s"}!`;
++        inviteMessage.className = "message success visible";
++      });
++
++      copyLinkButton.addEventListener("click", async () => {
++        const url = shareLinkInput.value;
++        try {
++          await navigator.clipboard.writeText(url);
++          shareMessage.textContent = "Link copied to clipboard!";
++          shareMessage.className = "message success visible";
++        } catch (error) {
++          shareMessage.textContent =
++            "Copy failed — highlight the link and copy it manually.";
++          shareMessage.className = "message error visible";
++        }
++      });
++
++      function updateRSVPList() {
++        rsvpList.innerHTML = "";
++        if (!rsvpRegistry.size) {
++          const empty = document.createElement("div");
++          empty.className = "empty-state";
++          empty.textContent =
++            "No responses yet. Share your link or send an invite to collect RSVPs.";
++          rsvpList.appendChild(empty);
++          return;
++        }
++
++        const groups = new Map();
++        rsvpRegistry.forEach((entry) => {
++          if (!groups.has(entry.status)) {
++            groups.set(entry.status, []);
++          }
++          groups.get(entry.status).push(entry);
++        });
++
++        groups.forEach((entries, status) => {
++          const fragment = rsvpGroupTemplate.content.cloneNode(true);
++          const group = fragment.querySelector(".rsvp-group");
++          const heading = group.querySelector("h4");
++          const list = group.querySelector("ul");
++
++          heading.textContent = `${statusLabels[status]} (${entries.length})`;
++          entries.forEach(({ name, email }) => {
++            const item = document.createElement("li");
++            item.textContent = email ? `${name} · ${email}` : name;
++            list.appendChild(item);
++          });
++
++          rsvpList.appendChild(group);
++        });
++      }
++
++      function handleRSVP(status) {
++        const name = rsvpNameInput.value.trim();
++        const email = rsvpEmailInput.value.trim();
++        if (!name) {
++          rsvpMessage.textContent = "Enter your name to submit a response.";
++          rsvpMessage.className = "message error visible";
++          return;
++        }
++        const key = (email || name).toLowerCase();
++        rsvpRegistry.set(key, { name, email, status });
++        updateRSVPList();
++        rsvpMessage.textContent = `Thanks ${name}! We saved your response: ${statusLabels[status].toLowerCase()}.`;
++        rsvpMessage.className = "message success visible";
++        rsvpNameInput.value = "";
++        rsvpEmailInput.value = "";
++      }
++
++      rsvpButtons.forEach((button) => {
++        button.addEventListener("click", () =>
++          handleRSVP(button.dataset.status),
++        );
++      });
++
++      function hydrateFromURL() {
++        const params = new URLSearchParams(window.location.search);
++        if (!params.size) {
++          updateShareLink();
++          return;
++        }
++        if (params.get("name")) {
++          eventNameInput.value = params.get("name");
++        }
++        if (params.get("start")) {
++          startTimeInput.value = params.get("start");
++        }
++        if (params.get("end")) {
++          endTimeInput.value = params.get("end");
++        }
++        if (params.get("description")) {
++          descriptionInput.value = params.get("description");
++        }
++        updatePreview();
++      }
++
++      hydrateFromURL();
++      updatePreview();
++    </script>
++  </body>
++</html>
