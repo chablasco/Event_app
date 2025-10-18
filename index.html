@@ -3,16 +3,20 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>EventApp – Create & Share Events</title>
+  <title>EventApp, created by Cha Blasc – Create & Share Events</title>
+  <!-- Google Font: Bebas Neue for brand/title -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #000000;       /* default slate-900 */
-      --fg: #ffffff;       /* default slate-200 */
+      --bg: #000000;       /* default background (black) */
+      --fg: #ffffff;       /* default text (white) */
       --card: color-mix(in oklab, var(--bg) 85%, black 15%);
-      --muted: #94a3b8;    /* slate-400 */
+      --muted: #a3a3a3;    /* neutral-400-ish for dark bg */
       --accent: #2563eb;   /* blue-600 */
       --radius: 16px;
-      --shadow: 0 10px 30px rgba(0,0,0,.25);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
       --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
     }
     * { box-sizing: border-box; }
@@ -28,7 +32,7 @@
     }
     .container { width: min(1100px, 100%); margin: 0 auto; padding: 16px 20px; }
     .row { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
-    .brand { font-weight: 800; letter-spacing:.2px; }
+    .brand { font-family: 'Bebas Neue', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; font-size: 28px; letter-spacing:.5px; }
     .brand a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
     .btn {
       appearance: none; border: 1px solid color-mix(in oklab, var(--fg) 20%, transparent);
@@ -127,7 +131,7 @@
 <body>
   <header>
     <div class="container row">
-      <div class="brand"><i>🎉 EventApp, created by <a href="https://www.chablasco.com" target="_blank" rel="noopener">Cha Blasco</i></a></div>
+      <div class="brand">🎉 EventApp, created by <a href="https://www.chablasco.com" target="_blank" rel="noopener">Cha Blasc</a></div>
       <nav class="row" style="gap:8px">
         <button class="btn ghost" id="btn-home">My events</button>
         <button class="btn primary" id="btn-new">Create event</button>
@@ -180,11 +184,11 @@
         <div class="grid cols-2">
           <div>
             <label for="bg">Background color</label>
-            <input id="bg" name="bg" type="color" value="#0f172a" />
+            <input id="bg" name="bg" type="color" value="#000000" />
           </div>
           <div>
             <label for="fg">Text color</label>
-            <input id="fg" name="fg" type="color" value="#e2e8f0" />
+            <input id="fg" name="fg" type="color" value="#ffffff" />
           </div>
           <div>
             <label for="font">Font</label>
@@ -350,14 +354,13 @@
     const qs = (sel, el=document) => el.querySelector(sel);
     const qsa = (sel, el=document) => Array.from(el.querySelectorAll(sel));
 
-    const DEFAULT_THEME = { bg:'#0f172a', fg:'#e2e8f0', font: "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji'" };
+    const DEFAULT_THEME = { bg:'#000000', fg:'#ffffff', font: "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji'" };
 
     const setTheme = ({bg, fg, font}) => {
       const root = document.documentElement;
       if (bg) root.style.setProperty('--bg', bg);
       if (fg) root.style.setProperty('--fg', fg);
       if (font) root.style.setProperty('--font', font);
-      // card auto-derives from --bg via CSS color-mix
     };
 
     const resetTheme = () => setTheme(DEFAULT_THEME);
@@ -400,7 +403,8 @@
       async updateEvent(eid, data) {
         const curr = await this.getEvent(eid);
         if (!curr) return;
-        localStorage.setItem(`event:${eid}`, JSON.stringify({ ...curr, ...data, id: eid, updatedAt: Date.now() }));
+        const merged = { ...curr, ...data, id: eid, updatedAt: Date.now() };
+        localStorage.setItem(`event:${eid}`, JSON.stringify(merged));
       },
       async addOrUpdateRSVP(eid, email, name, status) {
         const key = `rsvps:${eid}`;
@@ -615,38 +619,32 @@
       app.appendChild(view);
       const $ = (sel) => qs(sel, app);
 
-      const ev = await Store.getEvent(eid);
+      let ev = await Store.getEvent(eid);
       if (!ev) {
         app.innerHTML = `<div class="card"><h3>Event not found</h3><p class="muted">The link may be wrong or the event was removed (local mode).</p><div class="row"><button class="btn" onclick="location.hash='#/new'">Create new</button></div></div>`;
         return;
       }
 
-      // Apply global theme to the whole page based on event settings
-      setTheme({ bg: ev.styles?.bg || DEFAULT_THEME.bg, fg: ev.styles?.fg || DEFAULT_THEME.fg, font: ev.styles?.font || DEFAULT_THEME.font });
+      function applyThemeAndContent(fromEv) {
+        setTheme({ bg: fromEv.styles?.bg || DEFAULT_THEME.bg, fg: fromEv.styles?.fg || DEFAULT_THEME.fg, font: fromEv.styles?.font || DEFAULT_THEME.font });
+        const prev = $('#ev-preview');
+        prev.style.setProperty('--preview-bg', fromEv.styles?.bg || DEFAULT_THEME.bg);
+        prev.style.setProperty('--preview-fg', fromEv.styles?.fg || DEFAULT_THEME.fg);
+        prev.style.setProperty('--preview-font', fromEv.styles?.font || DEFAULT_THEME.font);
+        $('#ev-title').textContent = fromEv.name;
+        $('#ev-when').textContent = fmtDateRange(fromEv.startISO, fromEv.endISO);
+        $('#ev-desc').textContent = fromEv.description;
+        const cover = $('#ev-cover');
+        cover.innerHTML = fromEv.coverData ? `<img alt="Cover image" src="${fromEv.coverData}"/>` : `<span class="muted">No image</span>`;
+      }
 
-      // Apply preview styles (kept for the hero block)
-      const prev = $('#ev-preview');
-      prev.style.setProperty('--preview-bg', ev.styles?.bg || DEFAULT_THEME.bg);
-      prev.style.setProperty('--preview-fg', ev.styles?.fg || DEFAULT_THEME.fg);
-      prev.style.setProperty('--preview-font', ev.styles?.font || DEFAULT_THEME.font);
-
-      $('#ev-title').textContent = ev.name;
-      $('#ev-when').textContent = fmtDateRange(ev.startISO, ev.endISO);
-      $('#ev-desc').textContent = ev.description;
-
-      const cover = $('#ev-cover');
-      cover.innerHTML = ev.coverData ? `<img alt="Cover image" src="${ev.coverData}"/>` : `<span class="muted">No image</span>`;
+      applyThemeAndContent(ev);
 
       // Invite panel
       const link = location.origin + location.pathname + `#/event/${eid}`;
       $('#btn-copy').addEventListener('click', async () => { await navigator.clipboard.writeText(link); toast('Link copied'); });
       const subject = encodeURIComponent(`Invitation: ${ev.name}`);
-      const body = encodeURIComponent(`${ev.name}
-${fmtDateRange(ev.startISO, ev.endISO)}
-
-${ev.description}
-
-RSVP at: ${link}`);
+      const body = encodeURIComponent(`${ev.name}\n${fmtDateRange(ev.startISO, ev.endISO)}\n\n${ev.description}\n\nRSVP at: ${link}`);
       $('#btn-mailto').href = `mailto:${encodeURIComponent(ev.hostEmail || '')}?subject=${subject}&body=${body}`;
 
       // RSVP handling
@@ -701,6 +699,7 @@ RSVP at: ${link}`);
       $('#btn-save').onclick = saveEdits;
 
       function fillEditForm() {
+        // Pre-fill with last-saved values (no resets)
         qs('#e-name', app).value = ev.name;
         qs('#e-host', app).value = ev.hostEmail || '';
         qs('#e-start', app).value = ev.startISO;
@@ -708,11 +707,26 @@ RSVP at: ${link}`);
         qs('#e-desc', app).value = ev.description;
         qs('#e-bg', app).value = ev.styles?.bg || DEFAULT_THEME.bg;
         qs('#e-fg', app).value = ev.styles?.fg || DEFAULT_THEME.fg;
-        qs('#e-font', app).value = ev.styles?.font || 'system-ui';
+        qs('#e-font', app).value = ev.styles?.font || DEFAULT_THEME.font;
+
+        // Live preview while editing (without saving yet)
+        qs('#e-bg', app).oninput = (e) => { setTheme({ bg: e.target.value, fg: qs('#e-fg', app).value, font: qs('#e-font', app).value });
+          const temp = { ...ev, styles: { ...ev.styles, bg: e.target.value, fg: qs('#e-fg', app).value, font: qs('#e-font', app).value } };
+          applyThemeAndContent(temp);
+        };
+        qs('#e-fg', app).oninput = (e) => { setTheme({ bg: qs('#e-bg', app).value, fg: e.target.value, font: qs('#e-font', app).value });
+          const temp = { ...ev, styles: { ...ev.styles, bg: qs('#e-bg', app).value, fg: e.target.value, font: qs('#e-font', app).value } };
+          applyThemeAndContent(temp);
+        };
+        qs('#e-font', app).oninput = (e) => { setTheme({ bg: qs('#e-bg', app).value, fg: qs('#e-fg', app).value, font: e.target.value });
+          const temp = { ...ev, styles: { ...ev.styles, bg: qs('#e-bg', app).value, fg: qs('#e-fg', app).value, font: e.target.value } };
+          applyThemeAndContent(temp);
+        };
       }
 
       async function saveEdits() {
-        const data = {
+        // Build updated object from current form values
+        const updated = {
           name: qs('#e-name', app).value.trim(),
           hostEmail: qs('#e-host', app).value.trim(),
           startISO: qs('#e-start', app).value,
@@ -725,12 +739,14 @@ RSVP at: ${link}`);
           }
         };
         const f = qs('#e-cover', app).files?.[0];
-        if (f) data.coverData = await readFileDataURL(f);
-        await Store.updateEvent(eid, data);
-        Object.assign(ev, data);
-        setTheme({ bg: ev.styles?.bg, fg: ev.styles?.fg, font: ev.styles?.font });
+        if (f) updated.coverData = await readFileDataURL(f);
+
+        // Persist without re-rendering the whole page (keeps edit form values)
+        await Store.updateEvent(eid, updated);
+        ev = { ...ev, ...updated }; // keep current in-memory copy
+        applyThemeAndContent(ev);
         toast('Saved');
-        showEvent(eid); // re-render
+        // Keep edit panel open and values intact
       }
 
       // Update header buttons
