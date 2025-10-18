@@ -26,9 +26,11 @@
       display: flex; flex-direction: column; min-height: 100vh;
     }
     header {
-      position: sticky; top: 0; z-index: 10; backdrop-filter: blur(6px);
-      background: color-mix(in oklab, var(--bg) 85%, black 15%);
-      border-bottom: 1px solid rgba(0,0,0,.06);
+      position: sticky; top: 0; z-index: 10;
+      background: var(--bg);
+      border-bottom: 1px solid color-mix(in oklab, var(--fg) 15%, transparent);
+      /* Removed blur and tinted background so it matches the page */
+      font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
     }
     .container { width: min(1100px, 100%); margin: 0 auto; padding: 16px 20px; }
     .row { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
@@ -146,7 +148,6 @@
     <section class="stack">
       <div class="row between center">
         <h2 style="margin:0">My events</h2>
-        <button class="btn primary" id="go-new">Create new</button>
       </div>
       <div id="list-box" class="grid"></div>
       <p class="muted" id="list-hint"></p>
@@ -542,7 +543,6 @@
           toast('Link copied');
         }));
       }
-      qs('#go-new', app).onclick = () => location.hash = '#/new';
       qs('#btn-home').onclick = () => location.hash = '#/events';
       qs('#btn-new').onclick = () => location.hash = '#/new';
     }
@@ -644,7 +644,12 @@
       const link = location.origin + location.pathname + `#/event/${eid}`;
       $('#btn-copy').addEventListener('click', async () => { await navigator.clipboard.writeText(link); toast('Link copied'); });
       const subject = encodeURIComponent(`Invitation: ${ev.name}`);
-      const body = encodeURIComponent(`${ev.name}\n${fmtDateRange(ev.startISO, ev.endISO)}\n\n${ev.description}\n\nRSVP at: ${link}`);
+      const body = encodeURIComponent(`${ev.name}
+${fmtDateRange(ev.startISO, ev.endISO)}
+
+${ev.description}
+
+RSVP at: ${link}`);
       $('#btn-mailto').href = `mailto:${encodeURIComponent(ev.hostEmail || '')}?subject=${subject}&body=${body}`;
 
       // RSVP handling
