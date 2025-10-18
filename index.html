@@ -1,10 +1,10 @@
 diff --git a/index.html b/index.html
-index 8b137891791fe96927ad78e64b0aad7bded08bdc..55f47f170d9f718164c31b42a30311fb43db0502 100644
+index 8b137891791fe96927ad78e64b0aad7bded08bdc..a8f16b4b678688b46ee3577eba812b450fe3d3d6 100644
 --- a/index.html
 +++ b/index.html
-@@ -1 +1,922 @@
+@@ -1 +1,943 @@
 +<!DOCTYPE html>
-+<html lang="sv">
++<html lang="en">
 +<head>
 +    <meta charset="UTF-8">
 +    <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -412,127 +412,148 @@ index 8b137891791fe96927ad78e64b0aad7bded08bdc..55f47f170d9f718164c31b42a30311fb
 +                flex: 1 1 45%;
 +            }
 +        }
++
++        footer {
++            text-align: center;
++            padding: 1.5rem 1rem 2rem;
++            font-size: 0.85rem;
++            color: rgba(15, 23, 42, 0.6);
++        }
++
++        footer a {
++            color: inherit;
++            text-decoration: none;
++            border-bottom: 1px solid currentColor;
++        }
++
++        footer a:hover {
++            opacity: 0.8;
++        }
 +    </style>
 +</head>
 +<body>
 +    <header>
 +        <h1>Event Studio</h1>
-+        <p>Skapa, anpassa och dela dina event på några minuter. Välj färger och typsnitt, lägg till en omslagsbild och bjud enkelt in dina gäster.</p>
++        <p>Create, customize, and share your events in minutes. Choose colors and fonts, add a cover image, and invite your guests effortlessly.</p>
 +    </header>
 +    <main>
 +        <section aria-labelledby="form-title">
-+            <h2 id="form-title"><span>1</span> Bygg ditt event</h2>
++            <h2 id="form-title"><span>1</span> Build your event</h2>
 +            <form id="eventForm">
 +                <div class="field-group">
 +                    <div>
-+                        <label for="eventName">Eventnamn</label>
-+                        <input type="text" id="eventName" name="eventName" placeholder="Spelkväll med vänner" required>
++                        <label for="eventName">Event name</label>
++                        <input type="text" id="eventName" name="eventName" placeholder="Game night with friends" required>
 +                    </div>
 +                    <div class="time-grid">
 +                        <div>
-+                            <label for="startTime">Starttid</label>
++                            <label for="startTime">Start time</label>
 +                            <input type="datetime-local" id="startTime" name="startTime" required>
 +                        </div>
 +                        <div>
-+                            <label for="endTime">Sluttid</label>
++                            <label for="endTime">End time</label>
 +                            <input type="datetime-local" id="endTime" name="endTime" required>
 +                        </div>
 +                    </div>
 +                    <div>
-+                        <label for="description">Beskrivning</label>
-+                        <textarea id="description" name="description" placeholder="Beskriv vad som händer, vad gästerna ska ta med och annan viktig information." required></textarea>
++                        <label for="description">Description</label>
++                        <textarea id="description" name="description" placeholder="Describe what's happening, what guests should bring, and any other important details." required></textarea>
 +                    </div>
 +                    <div class="style-grid">
 +                        <div>
-+                            <label for="backgroundColor">Bakgrundsfärg</label>
++                            <label for="backgroundColor">Background color</label>
 +                            <input type="color" id="backgroundColor" name="backgroundColor" value="#f8fafc">
 +                        </div>
 +                        <div>
-+                            <label for="textColor">Textfärg</label>
++                            <label for="textColor">Text color</label>
 +                            <input type="color" id="textColor" name="textColor" value="#0f172a">
 +                        </div>
 +                        <div>
-+                            <label for="fontFamily">Typsnitt</label>
++                            <label for="fontFamily">Font</label>
 +                            <select id="fontFamily" name="fontFamily">
 +                                <option value="'Inter', sans-serif">Inter (modern)</option>
-+                                <option value="'Poppins', sans-serif">Poppins (rund)</option>
++                                <option value="'Poppins', sans-serif">Poppins (rounded)</option>
 +                                <option value="'Playfair Display', serif">Playfair Display (elegant)</option>
-+                                <option value="'Roboto Mono', monospace">Roboto Mono (teknisk)</option>
-+                                <option value="'Georgia', serif">Georgia (klassisk)</option>
++                                <option value="'Roboto Mono', monospace">Roboto Mono (technical)</option>
++                                <option value="'Georgia', serif">Georgia (classic)</option>
 +                            </select>
 +                        </div>
 +                    </div>
 +                    <div>
-+                        <label for="coverImage">Omslagsbild</label>
++                        <label for="coverImage">Cover image</label>
 +                        <input type="file" id="coverImage" name="coverImage" accept="image/*">
-+                        <p class="helper">Ladda upp en bild (JPG eller PNG) för att sätta stämningen.</p>
++                        <p class="helper">Upload an image (JPG or PNG) to set the mood.</p>
 +                    </div>
 +                </div>
 +                <div class="form-actions">
-+                    <button type="submit" class="primary" aria-label="Uppdatera eventet">Uppdatera event</button>
++                    <button type="submit" class="primary" aria-label="Update the event">Update event</button>
 +                </div>
 +                <div class="message" id="formMessage" role="alert"></div>
 +            </form>
 +
 +            <div class="invite-tools" aria-labelledby="invite-title">
-+                <h2 id="invite-title"><span>2</span> Bjud in gäster</h2>
++                <h2 id="invite-title"><span>2</span> Invite guests</h2>
 +                <div>
-+                    <label for="inviteEmails">Mejladresser</label>
-+                    <textarea id="inviteEmails" placeholder="Skriv eller klistra in adresser separerade med kommatecken eller radbrytningar."></textarea>
-+                    <p class="helper">Vi öppnar ditt e-postprogram så att du kan skicka en färdig inbjudan.</p>
++                    <label for="inviteEmails">Email addresses</label>
++                    <textarea id="inviteEmails" placeholder="Type or paste addresses separated by commas or line breaks."></textarea>
++                    <p class="helper">We'll open your email client with a ready-to-send invitation.</p>
 +                </div>
-+                <button type="button" class="primary" id="sendInvites">Skicka mejlinbjudan</button>
++                <button type="button" class="primary" id="sendInvites">Send email invitation</button>
 +                <div class="message" id="inviteMessage" role="status"></div>
 +                <div>
-+                    <label for="shareLink">Delningslänk</label>
++                    <label for="shareLink">Shareable link</label>
 +                    <div class="share-row">
 +                        <input type="text" id="shareLink" readonly aria-describedby="share-help" value="">
-+                        <button type="button" class="secondary" id="copyShare">Kopiera länk</button>
++                        <button type="button" class="secondary" id="copyShare">Copy link</button>
 +                    </div>
-+                    <p class="helper" id="share-help">Länken leder direkt till ditt event så att gäster kan tacka ja, nej eller kanske.</p>
++                    <p class="helper" id="share-help">The link takes guests straight to your event so they can RSVP yes, no, or maybe.</p>
 +                    <div class="message" id="shareMessage" role="status"></div>
 +                </div>
 +            </div>
 +        </section>
 +
 +        <section aria-labelledby="preview-title">
-+            <h2 id="preview-title"><span>3</span> Förhandsgranska &amp; svara</h2>
++            <h2 id="preview-title"><span>3</span> Preview &amp; respond</h2>
 +            <article class="preview-card" id="eventPreview">
 +                <div class="cover" id="coverPreview">
-+                    <h3 id="previewTitle">Spelkväll med vänner</h3>
++                    <h3 id="previewTitle">Game night with friends</h3>
 +                </div>
 +                <div class="event-content" id="eventContent">
 +                    <div class="event-meta" id="eventMeta">
-+                        <span id="previewTime">Fredag 19 maj 2024 kl. 18:00 – 22:00</span>
++                        <span id="previewTime">Friday, May 19, 2024 · 6:00 PM – 10:00 PM</span>
 +                    </div>
-+                    <div class="event-description" id="previewDescription">Planera för en kväll med brädspel, snacks och skratt. Ta gärna med ett favoritspel!</div>
++                    <div class="event-description" id="previewDescription">Plan an evening of board games, snacks, and laughter. Feel free to bring a favorite game!</div>
 +                    <section class="rsvp-section" aria-labelledby="rsvp-title">
-+                        <h3 id="rsvp-title">OSA direkt här</h3>
-+                        <p>Fyll i ditt namn (och mejl om du vill få bekräftelse) och välj sedan om du kommer, kanske eller inte kan delta.</p>
++                        <h3 id="rsvp-title">RSVP right here</h3>
++                        <p>Enter your name (and email if you'd like a confirmation) and then choose whether you're coming, maybe, or can't make it.</p>
 +                        <div class="field-group">
 +                            <div>
-+                                <label for="rsvpName">Namn</label>
-+                                <input type="text" id="rsvpName" placeholder="Ditt namn">
++                                <label for="rsvpName">Name</label>
++                                <input type="text" id="rsvpName" placeholder="Your name">
 +                            </div>
 +                            <div>
-+                                <label for="rsvpEmail">Mejl (valfritt)</label>
-+                                <input type="email" id="rsvpEmail" placeholder="namn@example.se">
++                                <label for="rsvpEmail">Email (optional)</label>
++                                <input type="email" id="rsvpEmail" placeholder="name@example.com">
 +                            </div>
 +                        </div>
 +                        <div class="rsvp-actions">
-+                            <button type="button" class="primary" data-status="yes">Jag kommer</button>
-+                            <button type="button" class="secondary" data-status="maybe">Kanske</button>
-+                            <button type="button" class="danger" data-status="no">Kan tyvärr inte</button>
++                            <button type="button" class="primary" data-status="yes">I'm going</button>
++                            <button type="button" class="secondary" data-status="maybe">Maybe</button>
++                            <button type="button" class="danger" data-status="no">Can't make it</button>
 +                        </div>
 +                        <div class="message" id="rsvpMessage" role="status" aria-live="polite"></div>
 +                        <div class="rsvp-list" id="rsvpList">
-+                            <div class="empty-state">Inga svar ännu. Dela länken eller skicka en inbjudan för att börja samla svar.</div>
++                            <div class="empty-state">No responses yet. Share the link or send an invitation to start collecting RSVPs.</div>
 +                        </div>
 +                    </section>
 +                </div>
 +            </article>
 +        </section>
 +    </main>
++
++    <footer>
++        Created by <a href="https://www.chablasco.com" target="_blank" rel="noopener">Cha Blasco</a>
++    </footer>
 +
 +    <template id="rsvpGroupTemplate">
 +        <div class="rsvp-group">
@@ -578,16 +599,16 @@ index 8b137891791fe96927ad78e64b0aad7bded08bdc..55f47f170d9f718164c31b42a30311fb
 +        let currentCoverImage = null;
 +
 +        const statusLabels = {
-+            yes: 'Kommer',
-+            maybe: 'Kanske',
-+            no: 'Kan inte'
++            yes: 'Going',
++            maybe: 'Maybe',
++            no: "Can't make it"
 +        };
 +
-+        const formatter = new Intl.DateTimeFormat('sv-SE', {
++        const formatter = new Intl.DateTimeFormat('en-US', {
 +            dateStyle: 'full',
 +            timeStyle: 'short'
 +        });
-+        const timeFormatter = new Intl.DateTimeFormat('sv-SE', { timeStyle: 'short' });
++        const timeFormatter = new Intl.DateTimeFormat('en-US', { timeStyle: 'short' });
 +
 +        function formatSingleDateTime(value) {
 +            if (!value) {
@@ -623,7 +644,7 @@ index 8b137891791fe96927ad78e64b0aad7bded08bdc..55f47f170d9f718164c31b42a30311fb
 +                const endDate = end ? new Date(end) : null;
 +
 +                if (!startDate || Number.isNaN(startDate.getTime())) {
-+                    return 'Ange starttid';
++                    return 'Enter a start time';
 +                }
 +
 +                if (!endDate || Number.isNaN(endDate.getTime())) {
@@ -637,7 +658,7 @@ index 8b137891791fe96927ad78e64b0aad7bded08bdc..55f47f170d9f718164c31b42a30311fb
 +
 +                return `${formatter.format(startDate)} – ${formatter.format(endDate)}`;
 +            } catch (error) {
-+                return 'Tid ej tillgänglig';
++                return 'Time not available';
 +            }
 +        }
 +
@@ -668,7 +689,7 @@ index 8b137891791fe96927ad78e64b0aad7bded08bdc..55f47f170d9f718164c31b42a30311fb
 +
 +        function updatePreview() {
 +            const rawName = eventNameInput.value.trim();
-+            const name = rawName || 'Ditt event';
++            const name = rawName || 'Your event';
 +            previewTitle.textContent = name;
 +            previewTitle.style.fontFamily = fontFamilySelect.value;
 +            coverPreview.style.fontFamily = fontFamilySelect.value;
@@ -682,7 +703,7 @@ index 8b137891791fe96927ad78e64b0aad7bded08bdc..55f47f170d9f718164c31b42a30311fb
 +            const timeText = formatTimeRange(startTimeInput.value, endTimeInput.value);
 +            previewTime.textContent = timeText;
 +
-+            const description = descriptionInput.value.trim() || 'Berätta vad som händer under ditt event.';
++            const description = descriptionInput.value.trim() || "Tell people what's happening at your event.";
 +            previewDescription.textContent = description;
 +
 +            if (currentCoverImage) {
@@ -722,11 +743,11 @@ index 8b137891791fe96927ad78e64b0aad7bded08bdc..55f47f170d9f718164c31b42a30311fb
 +            const start = startTimeInput.value;
 +            const end = endTimeInput.value;
 +            if (start && end && new Date(end) < new Date(start)) {
-+                showFormMessage('error', 'Sluttiden måste vara efter starttiden.');
++                showFormMessage('error', 'The end time has to be after the start time.');
 +                return;
 +            }
 +
-+            showFormMessage('success', 'Eventet uppdaterades. Dela det med dina gäster!');
++            showFormMessage('success', 'Event updated. Share it with your guests!');
 +            updatePreview();
 +        });
 +
@@ -734,7 +755,7 @@ index 8b137891791fe96927ad78e64b0aad7bded08bdc..55f47f170d9f718164c31b42a30311fb
 +            const [file] = event.target.files;
 +            if (file) {
 +                if (!file.type.startsWith('image/')) {
-+                    showFormMessage('error', 'Välj en bildfil (JPG eller PNG).');
++                    showFormMessage('error', 'Choose an image file (JPG or PNG).');
 +                    event.target.value = '';
 +                    return;
 +                }
@@ -762,17 +783,17 @@ index 8b137891791fe96927ad78e64b0aad7bded08bdc..55f47f170d9f718164c31b42a30311fb
 +
 +        function buildEmailBody(url) {
 +            const lines = [
-+                `Hej!`,
++                `Hello!`,
 +                '',
-+                `Du är inbjuden till ${eventNameInput.value || 'mitt event'}.`,
-+                `Start: ${formatSingleDateTime(startTimeInput.value) || 'Ange tid'}`,
-+                `Slut: ${formatSingleDateTime(endTimeInput.value) || 'Ange tid'}`,
++                `You're invited to ${eventNameInput.value || 'my event'}.`,
++                `Start: ${formatSingleDateTime(startTimeInput.value) || 'Add time'}`,
++                `End: ${formatSingleDateTime(endTimeInput.value) || 'Add time'}`,
 +                '',
 +                descriptionInput.value || '',
 +                '',
-+                `OSA och hitta mer information här: ${url}`,
++                `RSVP and get more details here: ${url}`,
 +                '',
-+                'Ser fram emot att ses!'
++                'Looking forward to seeing you!'
 +            ];
 +            return lines.join('\n');
 +        }
@@ -780,19 +801,19 @@ index 8b137891791fe96927ad78e64b0aad7bded08bdc..55f47f170d9f718164c31b42a30311fb
 +        sendInvitesButton.addEventListener('click', () => {
 +            const invitees = parseInvitees(inviteEmailsInput.value);
 +            if (!invitees.length) {
-+                inviteMessage.textContent = 'Lägg till minst en mejladress för att kunna skicka en inbjudan.';
++                inviteMessage.textContent = 'Add at least one email address to send an invitation.';
 +                inviteMessage.className = 'message error visible';
 +                return;
 +            }
 +
 +            const recipients = invitees.join(',');
 +            const params = new URLSearchParams({
-+                subject: `Inbjudan: ${eventNameInput.value || 'Event'}`,
++                subject: `Invitation: ${eventNameInput.value || 'Event'}`,
 +                body: buildEmailBody(shareLinkInput.value || window.location.href)
 +            });
 +            window.location.href = `mailto:${recipients}?${params.toString()}`;
 +
-+            inviteMessage.textContent = 'Vi har öppnat ditt e-postprogram med en färdig inbjudan.';
++            inviteMessage.textContent = "We've opened your email client with a prepared invitation.";
 +            inviteMessage.className = 'message success visible';
 +        });
 +
@@ -805,7 +826,7 @@ index 8b137891791fe96927ad78e64b0aad7bded08bdc..55f47f170d9f718164c31b42a30311fb
 +            updateShareLink();
 +            try {
 +                await navigator.clipboard.writeText(shareLinkInput.value);
-+                shareMessage.textContent = 'Delningslänken kopierades till urklipp.';
++                shareMessage.textContent = 'Shareable link copied to your clipboard.';
 +                shareMessage.className = 'message success visible';
 +            } catch (error) {
 +                shareLinkInput.removeAttribute('readonly');
@@ -813,7 +834,7 @@ index 8b137891791fe96927ad78e64b0aad7bded08bdc..55f47f170d9f718164c31b42a30311fb
 +                shareLinkInput.setSelectionRange(0, shareLinkInput.value.length);
 +                shareLinkInput.setAttribute('readonly', 'readonly');
 +                shareLinkInput.blur();
-+                shareMessage.textContent = 'Kunde inte kopiera automatiskt. Kopiera gärna manuellt.';
++                shareMessage.textContent = "Couldn't copy automatically. Please copy it manually.";
 +                shareMessage.className = 'message error visible';
 +            }
 +        });
@@ -839,7 +860,7 @@ index 8b137891791fe96927ad78e64b0aad7bded08bdc..55f47f170d9f718164c31b42a30311fb
 +            if (!rsvpRegistry.size) {
 +                const empty = document.createElement('div');
 +                empty.className = 'empty-state';
-+                empty.textContent = 'Inga svar ännu. Dela länken eller skicka en inbjudan för att börja samla svar.';
++                empty.textContent = 'No responses yet. Share the link or send an invitation to start collecting RSVPs.';
 +                rsvpList.appendChild(empty);
 +                applyRSVPStyling();
 +                return;
@@ -876,7 +897,7 @@ index 8b137891791fe96927ad78e64b0aad7bded08bdc..55f47f170d9f718164c31b42a30311fb
 +            const email = rsvpEmailInput.value.trim();
 +
 +            if (!name) {
-+                rsvpMessage.textContent = 'Skriv in ditt namn för att lämna ett svar.';
++                rsvpMessage.textContent = 'Enter your name to submit a response.';
 +                rsvpMessage.className = 'message error visible';
 +                return;
 +            }
@@ -885,7 +906,7 @@ index 8b137891791fe96927ad78e64b0aad7bded08bdc..55f47f170d9f718164c31b42a30311fb
 +            rsvpRegistry.set(key, { name, email, status });
 +            updateRSVPList();
 +
-+            rsvpMessage.textContent = `Tack ${name}! Vi har sparat ditt svar: ${statusLabels[status].toLowerCase()}.`;
++            rsvpMessage.textContent = `Thanks ${name}! We've saved your response: ${statusLabels[status].toLowerCase()}.`;
 +            rsvpMessage.className = 'message success visible';
 +
 +            rsvpNameInput.value = '';
