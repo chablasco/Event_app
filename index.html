@@ -134,7 +134,7 @@
 <body>
   <header>
     <div class="container row">
-      <div class="brand">Anti-Facebook EventApp – Create & Share Events – by <a href="https://www.chablasco.com" target="_blank" rel="noopener">Cha Blasco</a></div>
+      <div class="brand">EventApp – Create & Share Events – by <a href="https://www.chablasco.com" target="_blank" rel="noopener">Cha Blasco</a></div>
       <nav class="row" style="gap:8px">
         <button class="btn ghost" id="btn-home">My events</button>
         <button class="btn primary" id="btn-new">Create event</button>
@@ -640,6 +640,130 @@
       }
 
       applyThemeAndContent(ev);
+
+      // Determine host-only privileges (creator-only in local mode)
+      const isOwner = localStorage.getItem(`owner:${eid}`) === '1';
+
+      // Invite panel
+      const link = location.origin + location.pathname + `#/event/${eid}`;
+      const mailtoBtn = $('#btn-mailto');
+      if (mailtoBtn) {
+        const subject = encodeURIComponent(`Invitation: ${ev.name}`);
+        const body = encodeURIComponent(`${ev.name}\n${fmtDateRange(ev.startISO, ev.endISO)}\n\n${ev.description}\n\nRSVP at: ${link}`);
+        mailtoBtn.href = `mailto:${encodeURIComponent(ev.hostEmail || '')}?subject=${subject}&body=${body}`;
+      }
+      const copyBtn = $('#btn-copy');
+      copyBtn?.addEventListener('click', async () => { await navigator.clipboard.writeText(link); toast('Link copied'); });
+
+      // If NOT owner, enforce Presentation Mode: remove edit & invite UI entirely
+      if (!isOwner) {
+        $('#owner-hint')?.remove();
+        $('#edit-panel')?.remove();
+        $('#invite-box')?.remove();
+      } else {
+        // Owner can see edit controls
+        const ownerHint = $('#owner-hint');
+        if (ownerHint) ownerHint.hidden = false;
+      }
+
+      // RSVP handling (available to everyone)
+      const applyCounts = (list) => {
+        const yes = list.filter(x => x.status === 'yes').length;
+        const maybe = list.filter(x => x.status === 'maybe').length;
+        const no = list.filter(x => x.status === 'no').length;
+        $('#count-yes').textContent = `Yes: ${yes}`;
+        $('#count-maybe').textContent = `Maybe: ${maybe}`;
+        $('#count-no').textContent = `No: ${no}`;
+      };
+
+      const renderGuests = (list) => {
+        const box = $('#guest-list');
+        box.innerHTML = '';
+        const row = (g) => `<div class="row between"><div>${g.name || 'Unknown'} <span class="muted">&lt;${g.email}&gt;</span></div><div>${g.status === 'yes' ? '✅' : g.status === 'maybe' ? '🤔' : '❌'}</div></div>`;
+        list.sort((a,b) => (a.status+'_'+(a.name||'')).localeCompare(b.status+'_'+(b.name||'')));
+        list.forEach(g => { const d = document.createElement('div'); d.innerHTML = row(g); box.appendChild(d); });
+      };
+
+      const list = await Store.getRSVPs(eid);
+      applyCounts(list); renderGuests(list);
+
+      const unsub = Store.subscribeRSVPs(eid, (list) => { applyCounts(list); renderGuests(list); });
+      window.addEventListener('beforeunload', () => unsub && unsub());
+
+      const meName = localStorage.getItem('me:name') || '';
+      const meEmail = localStorage.getItem('me:email') || '';
+      $('#my-name').value = meName; $('#my-email').value = meEmail;
+
+      qsa('[data-rsvp]', app).forEach(btn => btn.addEventListener('click', async () => {
+        const name = $('#my-name').value.trim();
+        const email = $('#my-email').value.trim();
+        if (!email) { toast('Please enter your email'); return; }
+        localStorage.setItem('me:name', name); localStorage.setItem('me:email', email);
+        const status = btn.getAttribute('data-rsvp');
+        await Store.addOrUpdateRSVP(eid, email, name, status);
+        toast('Response saved');
+        const list = await Store.getRSVPs(eid); applyCounts(list); renderGuests(list);
+      }));
+
+      // Owner-only edit handlers (wired regardless; buttons are removed for guests)
+      $('#btn-back').onclick = () => history.back();
+      const btnEdit = $('#btn-edit');
+      if (btnEdit) btnEdit.onclick = () => {
+        const p = qs('#edit-panel', app); if (!p) return; p.hidden = !p.hidden;
+        if (!p.hidden) fillEditForm();
+      };
+      const btnSave = $('#btn-save');
+      if (btnSave) btnSave.onclick = saveEdits;
+
+      function fillEditForm() {
+        qs('#e-name', app).value = ev.name;
+        qs('#e-host', app).value = ev.hostEmail || '';
+        qs('#e-start', app).value = ev.startISO;
+        qs('#e-end', app).value = ev.endISO;
+        qs('#e-desc', app).value = ev.description;
+        qs('#e-bg', app).value = ev.styles?.bg || DEFAULT_THEME.bg;
+        qs('#e-fg', app).value = ev.styles?.fg || DEFAULT_THEME.fg;
+        qs('#e-font', app).value = ev.styles?.font || DEFAULT_THEME.font;
+
+        qs('#e-bg', app).oninput = (e) => { setTheme({ bg: e.target.value, fg: qs('#e-fg', app).value, font: qs('#e-font', app).value });
+          const temp = { ...ev, styles: { ...ev.styles, bg: e.target.value, fg: qs('#e-fg', app).value, font: qs('#e-font', app).value } };
+          applyThemeAndContent(temp);
+        };
+        qs('#e-fg', app).oninput = (e) => { setTheme({ bg: qs('#e-bg', app).value, fg: e.target.value, font: qs('#e-font', app).value });
+          const temp = { ...ev, styles: { ...ev.styles, bg: qs('#e-bg', app).value, fg: e.target.value, font: qs('#e-font', app).value } };
+          applyThemeAndContent(temp);
+        };
+        qs('#e-font', app).oninput = (e) => { setTheme({ bg: qs('#e-bg', app).value, fg: qs('#e-fg', app).value, font: e.target.value });
+          const temp = { ...ev, styles: { ...ev.styles, bg: qs('#e-bg', app).value, fg: qs('#e-fg', app).value, font: e.target.value } };
+          applyThemeAndContent(temp);
+        };
+      }
+
+      async function saveEdits() {
+        const updated = {
+          name: qs('#e-name', app).value.trim(),
+          hostEmail: qs('#e-host', app).value.trim(),
+          startISO: qs('#e-start', app).value,
+          endISO: qs('#e-end', app).value,
+          description: qs('#e-desc', app).value.trim(),
+          styles: {
+            bg: qs('#e-bg', app).value,
+            fg: qs('#e-fg', app).value,
+            font: qs('#e-font', app).value,
+          }
+        };
+        const f = qs('#e-cover', app).files?.[0];
+        if (f) updated.coverData = await readFileDataURL(f);
+        await Store.updateEvent(eid, updated);
+        ev = { ...ev, ...updated };
+        applyThemeAndContent(ev);
+        toast('Saved');
+      }
+
+      // Update header buttons
+      qs('#btn-home').onclick = () => location.hash = '#/events';
+      qs('#btn-new').onclick = () => location.hash = '#/new';
+    }
 
       // Invite panel
       const link = location.origin + location.pathname + `#/event/${eid}`;
