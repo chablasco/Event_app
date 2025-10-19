@@ -29,7 +29,6 @@
       position: sticky; top: 0; z-index: 10;
       background: var(--bg);
       border-bottom: 1px solid color-mix(in oklab, var(--fg) 15%, transparent);
-      /* Removed blur and tinted background so it matches the page */
       font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
     }
     .container { width: min(1100px, 100%); margin: 0 auto; padding: 16px 20px; }
@@ -136,7 +135,7 @@
 <body>
   <header>
     <div class="container row">
-      <div class="brand">Anti-Facebook EventApp – by <a href="https://www.chablasco.com" target="_blank" rel="noopener">Cha Blasco</a></div>
+      <div class="brand">Anit-Facebook EventApp – by <a href="https://www.chablasco.com" target="_blank" rel="noopener">Cha Blasco</a></div>
       <nav class="row" style="gap:8px">
         <button class="btn ghost" id="btn-home">My events</button>
         <button class="btn primary" id="btn-new">Create event</button>
@@ -148,6 +147,7 @@
 
   <!-- LIST VIEW -->
   <template id="tpl-list">
+    <!-- list: no create button -->
     <section class="stack">
       <div class="row between center">
         <h2 style="margin:0">My events</h2>
@@ -662,18 +662,10 @@ RSVP at: ${link}`);
       const copyBtn = $('#btn-copy');
       copyBtn?.addEventListener('click', async () => { await navigator.clipboard.writeText(link); toast('Link copied'); });
 
-      // If NOT owner, enforce Presentation Mode: remove edit & invite UI entirely
-      if (!isOwner) {
-        $('#owner-hint')?.remove();
-        $('#edit-panel')?.remove();
-        $('#invite-box')?.remove();
-      } else {
-        // Owner can see edit controls
-        const ownerHint = $('#owner-hint');
-        if (ownerHint) ownerHint.hidden = false;
-      }
-
-      // RSVP handling (available to everyone)
+      // Owner hint only; guests keep presentation view by default
+      const ownerHint = $('#owner-hint');
+      if (ownerHint) ownerHint.hidden = !owner;
+// RSVP handling (available to everyone)
       const applyCounts = (list) => {
         const yes = list.filter(x => x.status === 'yes').length;
         const maybe = list.filter(x => x.status === 'maybe').length;
