@@ -7,7 +7,7 @@
   <!-- Google Font: Bricolage Grotesque for brand/title -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@10..48,500;10..48,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@10..48,700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #ffffff;       /* default background (white) */
@@ -26,15 +26,14 @@
       display: flex; flex-direction: column; min-height: 100vh;
     }
     header {
-      position: sticky; top: 0; z-index: 10;
-      background: var(--bg);
-      border-bottom: 1px solid color-mix(in oklab, var(--fg) 15%, transparent);
-      font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      position: sticky; top: 0; z-index: 10; backdrop-filter: blur(6px);
+      background: color-mix(in oklab, var(--bg) 85%, black 15%);
+      border-bottom: 1px solid rgba(0,0,0,.06);
     }
     .container { width: min(1100px, 100%); margin: 0 auto; padding: 16px 20px; }
     .row { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
-    .brand { font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; font-size: 16px; letter-spacing:.05px; font-weight: 700; }
-    h1, h2, h3 { font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; font-weight: 500 !important; font-size: 18px; letter-spacing:.05px; }
+    .brand { font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; font-size: 18px; letter-spacing:.2px; font-weight: 700; }
+    
     .brand a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
     .btn {
       appearance: none; border: 1px solid color-mix(in oklab, var(--fg) 20%, transparent);
@@ -135,7 +134,7 @@
 <body>
   <header>
     <div class="container row">
-      <div class="brand">Anit-Facebook EventApp – by <a href="https://www.chablasco.com" target="_blank" rel="noopener">Cha Blasco</a></div>
+      <div class="brand">EventApp – Create & Share Events – by <a href="https://www.chablasco.com" target="_blank" rel="noopener">Cha Blasco</a></div>
       <nav class="row" style="gap:8px">
         <button class="btn ghost" id="btn-home">My events</button>
         <button class="btn primary" id="btn-new">Create event</button>
@@ -147,10 +146,10 @@
 
   <!-- LIST VIEW -->
   <template id="tpl-list">
-    <!-- list: no create button -->
     <section class="stack">
       <div class="row between center">
         <h2 style="margin:0">My events</h2>
+        <button class="btn primary" id="go-new">Create new</button>
       </div>
       <div id="list-box" class="grid"></div>
       <p class="muted" id="list-hint"></p>
@@ -532,6 +531,44 @@
             <small class="muted">URL: <code>${link}</code></small>
           `;
           box.appendChild(card);
+          const prev = card.querySelector('.ev-preview');
+          prev.style.setProperty('--preview-bg', ev.styles?.bg || DEFAULT_THEME.bg);
+          prev.style.setProperty('--preview-fg', ev.styles?.fg || DEFAULT_THEME.fg);
+          prev.style.setProperty('--preview-font', ev.styles?.font || DEFAULT_THEME.font);
+        });
+
+        qsa('.copy', box).forEach(btn => btn.addEventListener('click', async (e) => {
+          const l = e.currentTarget.getAttribute('data-link');
+          await navigator.clipboard.writeText(l);
+          toast('Link copied');
+        }));
+      }
+      const newBtn = qs('#go-new', app);
+      if (newBtn) newBtn.onclick = () => location.hash = '#/new';
+      qs('#btn-home').onclick = () => location.hash = '#/events';
+      qs('#btn-new').onclick = () => location.hash = '#/new';
+    } else {
+        box.classList.add('grid','cols-2');
+        items.forEach(ev => {
+          const link = location.origin + location.pathname + '#/event/' + ev.id;
+          const card = document.createElement('div');
+          card.className = 'card stack';
+          card.innerHTML = `
+            <div class="preview ev-preview">
+              <div class="cover">${ev.coverData ? `<img alt="Cover image" src="${ev.coverData}"/>` : `<span class=\"muted\">No image</span>`}</div>
+              <div class="hero">
+                <div class="title">${ev.name}</div>
+                <div class="when">${fmtDateRange(ev.startISO, ev.endISO)}</div>
+                <div class="muted">${(ev.description||'')}</div>
+              </div>
+            </div>
+            <div class="row between center">
+              <a class="btn" href="#/event/${ev.id}">Open</a>
+              <button class="btn ghost copy" data-link="${link}">Copy link</button>
+            </div>
+            <small class="muted">URL: <code>${link}</code></small>
+          `;
+          box.appendChild(card);
           // Apply per-card theme to the preview block
           const prev = card.querySelector('.ev-preview');
           prev.style.setProperty('--preview-bg', ev.styles?.bg || DEFAULT_THEME.bg);
@@ -651,21 +688,24 @@
       const mailtoBtn = $('#btn-mailto');
       if (mailtoBtn) {
         const subject = encodeURIComponent(`Invitation: ${ev.name}`);
-        const body = encodeURIComponent(`${ev.name}
-${fmtDateRange(ev.startISO, ev.endISO)}
-
-${ev.description}
-
-RSVP at: ${link}`);
+        const body = encodeURIComponent(`${ev.name}\n${fmtDateRange(ev.startISO, ev.endISO)}\n\n${ev.description}\n\nRSVP at: ${link}`);
         mailtoBtn.href = `mailto:${encodeURIComponent(ev.hostEmail || '')}?subject=${subject}&body=${body}`;
       }
       const copyBtn = $('#btn-copy');
       copyBtn?.addEventListener('click', async () => { await navigator.clipboard.writeText(link); toast('Link copied'); });
 
-      // Owner hint only; guests keep presentation view by default
-      const ownerHint = $('#owner-hint');
-      if (ownerHint) ownerHint.hidden = !owner;
-// RSVP handling (available to everyone)
+      // If NOT owner, enforce Presentation Mode: remove edit & invite UI entirely
+      if (!isOwner) {
+        $('#owner-hint')?.remove();
+        $('#edit-panel')?.remove();
+        $('#invite-box')?.remove();
+      } else {
+        // Owner can see edit controls
+        const ownerHint = $('#owner-hint');
+        if (ownerHint) ownerHint.hidden = false;
+      }
+
+      // RSVP handling (available to everyone)
       const applyCounts = (list) => {
         const yes = list.filter(x => x.status === 'yes').length;
         const maybe = list.filter(x => x.status === 'maybe').length;
@@ -757,125 +797,6 @@ RSVP at: ${link}`);
         ev = { ...ev, ...updated };
         applyThemeAndContent(ev);
         toast('Saved');
-      }
-
-      // Update header buttons
-      qs('#btn-home').onclick = () => location.hash = '#/events';
-      qs('#btn-new').onclick = () => location.hash = '#/new';
-    }
-
-      // Invite panel
-      const link = location.origin + location.pathname + `#/event/${eid}`;
-      $('#btn-copy').addEventListener('click', async () => { await navigator.clipboard.writeText(link); toast('Link copied'); });
-      const subject = encodeURIComponent(`Invitation: ${ev.name}`);
-      const body = encodeURIComponent(`${ev.name}
-${fmtDateRange(ev.startISO, ev.endISO)}
-
-${ev.description}
-
-RSVP at: ${link}`);
-      $('#btn-mailto').href = `mailto:${encodeURIComponent(ev.hostEmail || '')}?subject=${subject}&body=${body}`;
-
-      // RSVP handling
-      const applyCounts = (list) => {
-        const yes = list.filter(x => x.status === 'yes').length;
-        const maybe = list.filter(x => x.status === 'maybe').length;
-        const no = list.filter(x => x.status === 'no').length;
-        $('#count-yes').textContent = `Yes: ${yes}`;
-        $('#count-maybe').textContent = `Maybe: ${maybe}`;
-        $('#count-no').textContent = `No: ${no}`;
-      };
-
-      const renderGuests = (list) => {
-        const box = $('#guest-list');
-        box.innerHTML = '';
-        const row = (g) => `<div class="row between"><div>${g.name || 'Unknown'} <span class="muted">&lt;${g.email}&gt;</span></div><div>${g.status === 'yes' ? '✅' : g.status === 'maybe' ? '🤔' : '❌'}</div></div>`;
-        list.sort((a,b) => (a.status+'_'+(a.name||'')).localeCompare(b.status+'_'+(b.name||'')));
-        list.forEach(g => { const d = document.createElement('div'); d.innerHTML = row(g); box.appendChild(d); });
-      };
-
-      const list = await Store.getRSVPs(eid);
-      applyCounts(list); renderGuests(list);
-
-      const unsub = Store.subscribeRSVPs(eid, (list) => { applyCounts(list); renderGuests(list); });
-      window.addEventListener('beforeunload', () => unsub && unsub());
-
-      const meName = localStorage.getItem('me:name') || '';
-      const meEmail = localStorage.getItem('me:email') || '';
-      $('#my-name').value = meName; $('#my-email').value = meEmail;
-
-      qsa('[data-rsvp]', app).forEach(btn => btn.addEventListener('click', async () => {
-        const name = $('#my-name').value.trim();
-        const email = $('#my-email').value.trim();
-        if (!email) { toast('Please enter your email'); return; }
-        localStorage.setItem('me:name', name); localStorage.setItem('me:email', email);
-        const status = btn.getAttribute('data-rsvp');
-        await Store.addOrUpdateRSVP(eid, email, name, status);
-        toast('Response saved');
-        const list = await Store.getRSVPs(eid); applyCounts(list); renderGuests(list);
-      }));
-
-      // Owner-only edit (if you created the event in this browser)
-      const owner = localStorage.getItem(`owner:${eid}`) === '1';
-      const ownerHint = $('#owner-hint');
-      if (owner) ownerHint.hidden = false;
-
-      $('#btn-back').onclick = () => history.back();
-      $('#btn-edit').onclick = () => {
-        const p = qs('#edit-panel', app); p.hidden = !p.hidden;
-        if (!p.hidden) fillEditForm();
-      };
-      $('#btn-save').onclick = saveEdits;
-
-      function fillEditForm() {
-        // Pre-fill with last-saved values (no resets)
-        qs('#e-name', app).value = ev.name;
-        qs('#e-host', app).value = ev.hostEmail || '';
-        qs('#e-start', app).value = ev.startISO;
-        qs('#e-end', app).value = ev.endISO;
-        qs('#e-desc', app).value = ev.description;
-        qs('#e-bg', app).value = ev.styles?.bg || DEFAULT_THEME.bg;
-        qs('#e-fg', app).value = ev.styles?.fg || DEFAULT_THEME.fg;
-        qs('#e-font', app).value = ev.styles?.font || DEFAULT_THEME.font;
-
-        // Live preview while editing (without saving yet)
-        qs('#e-bg', app).oninput = (e) => { setTheme({ bg: e.target.value, fg: qs('#e-fg', app).value, font: qs('#e-font', app).value });
-          const temp = { ...ev, styles: { ...ev.styles, bg: e.target.value, fg: qs('#e-fg', app).value, font: qs('#e-font', app).value } };
-          applyThemeAndContent(temp);
-        };
-        qs('#e-fg', app).oninput = (e) => { setTheme({ bg: qs('#e-bg', app).value, fg: e.target.value, font: qs('#e-font', app).value });
-          const temp = { ...ev, styles: { ...ev.styles, bg: qs('#e-bg', app).value, fg: e.target.value, font: qs('#e-font', app).value } };
-          applyThemeAndContent(temp);
-        };
-        qs('#e-font', app).oninput = (e) => { setTheme({ bg: qs('#e-bg', app).value, fg: qs('#e-fg', app).value, font: e.target.value });
-          const temp = { ...ev, styles: { ...ev.styles, bg: qs('#e-bg', app).value, fg: qs('#e-fg', app).value, font: e.target.value } };
-          applyThemeAndContent(temp);
-        };
-      }
-
-      async function saveEdits() {
-        // Build updated object from current form values
-        const updated = {
-          name: qs('#e-name', app).value.trim(),
-          hostEmail: qs('#e-host', app).value.trim(),
-          startISO: qs('#e-start', app).value,
-          endISO: qs('#e-end', app).value,
-          description: qs('#e-desc', app).value.trim(),
-          styles: {
-            bg: qs('#e-bg', app).value,
-            fg: qs('#e-fg', app).value,
-            font: qs('#e-font', app).value,
-          }
-        };
-        const f = qs('#e-cover', app).files?.[0];
-        if (f) updated.coverData = await readFileDataURL(f);
-
-        // Persist without re-rendering the whole page (keeps edit form values)
-        await Store.updateEvent(eid, updated);
-        ev = { ...ev, ...updated }; // keep current in-memory copy
-        applyThemeAndContent(ev);
-        toast('Saved');
-        // Keep edit panel open and values intact
       }
 
       // Update header buttons
